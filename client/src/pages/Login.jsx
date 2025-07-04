@@ -1,0 +1,63 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+
+export default function Login() {
+    const { setUser } = useAuth();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post('/api/auth/login', form);
+      localStorage.setItem('token', res.data.token);
+      setUser(res.data.user);
+      navigate(`/${res.data.user.role}`);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Login failed');
+    }
+  };
+
+  const googleLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/google';
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h1 className="text-3xl font-bold mb-6 text-center text-indigo-600">MindMend Login</h1>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            value={form.password}
+            onChange={e => setForm({ ...form, password: e.target.value })}
+            required
+          />
+          <button type="submit" className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition">
+            Login
+          </button>
+        </form>
+        <div className="text-center my-4 text-gray-500">or</div>
+        <button onClick={googleLogin} className="w-full flex items-center justify-center gap-2 border p-3 rounded-xl hover:bg-gray-100 transition">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png" className="w-5 h-5" />
+          Continue with Google
+        </button>
+        <p className="text-sm text-center mt-4 text-gray-600">
+          Don't have an account? <a href="/register" className="text-indigo-600 hover:underline">Register</a>
+        </p>
+      </div>
+    </div>
+  );
+}
