@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-
 
 const questions = [
   { id: 1, q: "How have you been sleeping lately?", weight: { happy: 0, self: 1, need: 2 } },
@@ -14,7 +13,6 @@ const questions = [
   { id: 8, q: "Do you feel supported by those around you?", weight: { happy: 2, self: 1, need: 0 } }
 ];
 
-
 export default function MoodAssessmentModal({ onComplete }) {
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState({ happy: 0, self: 0, need: 0 });
@@ -23,35 +21,48 @@ export default function MoodAssessmentModal({ onComplete }) {
   const answer = async (type) => {
     const newScores = { ...scores };
     const weights = questions[step].weight;
-    Object.keys(weights).forEach((k) => {
-      newScores[k] += (type === 'yes' ? weights[k] : 0);
+    Object.keys(weights).forEach(k => {
+      newScores[k] += type === 'yes' ? weights[k] : 0;
     });
     setScores(newScores);
 
     if (step + 1 < questions.length) {
       setStep(step + 1);
     } else {
-      const category = Object.entries(newScores).sort((a, b) => b[1] - a[1])[0][0];
+      const finalCategory = Object.entries(newScores).sort((a, b) => b[1] - a[1])[0][0];
       setShow(false);
+
       try {
-            const token = localStorage.getItem('token');
-            await axios.post('/api/mood/save', {
-            answers: scores,
-            score: Math.max(...Object.values(scores)),
-            category
-            }, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-            });
-            const updated = JSON.parse(localStorage.getItem('user'));
-            updated.hasFilledMood = true;
-            updated.lastMoodCheck = new Date().toISOString();
-            localStorage.setItem('user', JSON.stringify(updated));
-        } catch (err) {
-            console.error("Failed to save mood data", err);
+        const token = localStorage.getItem('token');
+        await axios.post('/api/mood/save', {
+          answers: newScores,
+          score: Math.max(...Object.values(newScores)),
+          category: finalCategory
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // 🎯 Update LocalStorage Safely
+        const raw = localStorage.getItem('user');
+        if (raw && raw !== 'undefined') {
+          const updated = JSON.parse(raw);
+          updated.hasFilledMood = true;
+          updated.lastMoodCheck = new Date().toISOString();
+          localStorage.setItem('user', JSON.stringify(updated));
+        } else {
+          console.warn("⚠️ No valid 'user' found in localStorage.");
         }
-      onComplete(category);
+
+        localStorage.setItem('moodCategory', finalCategory);
+        localStorage.setItem('lastMoodCheck', Date.now().toString());
+        onComplete(finalCategory);
+
+      } catch (err) {
+        console.error("❌ Failed to save mood data", err);
+        onComplete(finalCategory); // Still proceed
+      }
     }
   };
 

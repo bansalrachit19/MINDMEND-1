@@ -4,19 +4,19 @@ import { motion } from 'framer-motion';
 
 export default function TherapistRecommendations() {
   const [therapists, setTherapists] = useState([]);
-  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetch = async () => {
+      const token = localStorage.getItem('token');
       try {
         const res = await axios.post(
           '/api/users/match-therapists',
-          { keywords: ['Anxiety', 'Grief', 'Trauma'] }, // Will be made dynamic later
+          { keywords: ['Anxiety', 'Grief', 'Trauma'] }, // TODO: Replace with real dynamic keywords
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTherapists(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("🧠 Error fetching matched therapists:", err);
       }
     };
     fetch();
@@ -28,16 +28,21 @@ export default function TherapistRecommendations() {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white p-6 rounded-2xl shadow mt-6"
     >
-      <h3 className="text-2xl font-bold text-purple-700 mb-4">🧑‍⚕️ We Recommend These Therapists for You !!</h3>
+      <h3 className="text-2xl font-bold text-purple-700 mb-4">🧑‍⚕️ We Recommend These Therapists for You</h3>
+
       {therapists.length === 0 ? (
-        <p className="text-gray-500">No therapists matched your emotional needs yet.</p>
+        <p className="text-gray-500 italic">
+          No therapists matched your emotional needs yet. Try updating your mood check or browse all therapists from the booking page.
+        </p>
       ) : (
         <ul className="space-y-4">
           {therapists.map((t) => (
             <li key={t._id} className="border p-4 rounded-xl flex justify-between items-center hover:shadow transition">
               <div>
                 <h4 className="text-lg font-semibold text-purple-800">{t.name}</h4>
-                <p className="text-sm text-gray-600">Specializations: {t.specialization.join(', ')}</p>
+                <p className="text-sm text-gray-600">
+                  Specializations: {t.specialization.join(', ')}
+                </p>
               </div>
               <a
                 href="/user/appointments"
