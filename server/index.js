@@ -15,6 +15,8 @@ import selfHelpRoutes from './routes/selfHelpRoutes.js'
 
 import cron from 'node-cron';
 import { sendUpcomingReminders } from './cron/sendReminders.js';
+import messageRoutes from './routes/messageRoutes.js';
+
 
 
 const app = express();
@@ -33,6 +35,7 @@ app.use('/api/mood', moodRoutes);
 
 app.use('/api/resources', resourceRoutes);
 app.use('/api/selfhelp', selfHelpRoutes);
+app.use('/api/messages', messageRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => app.listen(PORT, () => console.log(`Server running on ${PORT}`)))

@@ -2,6 +2,7 @@ import TherapistSlot from '../models/TherapistSlot.js';
 import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';
 
+// ✅ Create a new slot (therapist only)
 export const createSlot = async (req, res) => {
   if (req.user.role !== 'therapist') return res.status(403).json({ msg: 'Unauthorized' });
 
@@ -10,22 +11,41 @@ export const createSlot = async (req, res) => {
     const exists = await TherapistSlot.findOne({ therapist: req.user.id, date, time });
     if (exists) return res.status(400).json({ msg: 'Slot already exists' });
 
-    const slot = await TherapistSlot.create({ therapist: req.user.id, date, time, duration: duration || 30 });
+    const slot = await TherapistSlot.create({
+      therapist: req.user.id,
+      date,
+      time,
+      duration: duration || 30
+    });
+
     res.json(slot);
   } catch (err) {
     res.status(500).json({ msg: 'Error creating slot' });
   }
 };
 
+// ✅ Get available slots (include those booked by current user)
 export const getSlots = async (req, res) => {
   try {
-    const slots = await TherapistSlot.find({ isBooked: false }).populate('therapist', 'name');
-    res.json(slots);
+    const allSlots = await TherapistSlot.find().populate('therapist', 'name');
+
+    const myAppointments = await Appointment.find({ user: req.user.id }).select('slot');
+    const myBookedSlotIds = new Set(myAppointments.map(appt => appt.slot.toString()));
+
+    const result = allSlots
+      .filter(slot => !slot.isBooked || myBookedSlotIds.has(slot._id.toString()))
+      .map(slot => ({
+        ...slot.toObject(),
+        bookedByMe: myBookedSlotIds.has(slot._id.toString())
+      }));
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ msg: 'Failed to fetch slots' });
   }
 };
 
+// ✅ Book an appointment (user only)
 export const bookAppointment = async (req, res) => {
   if (req.user.role !== 'user') return res.status(403).json({ msg: 'Unauthorized' });
 
@@ -39,7 +59,7 @@ export const bookAppointment = async (req, res) => {
       user: req.user.id,
       therapist: slot.therapist,
       slot: slot._id,
-      note // ✅ Save user note
+      note
     });
 
     slot.isBooked = true;
@@ -51,6 +71,7 @@ export const bookAppointment = async (req, res) => {
   }
 };
 
+// ✅ Get all appointments for current user or therapist
 export const getMyAppointments = async (req, res) => {
   try {
     const query = req.user.role === 'user'
@@ -68,31 +89,18 @@ export const getMyAppointments = async (req, res) => {
   }
 };
 
+// ✅ Cancel an appointment (by user or therapist)
 export const cancelAppointment = async (req, res) => {
   const { id } = req.params;
-  console.log('Cancel Request for:', id);
 
   try {
     const appt = await Appointment.findById(id).populate('slot');
-
-    if (!appt){
-        console.log('appointment not found');
-        return res.status(404).json({ msg: 'Appointment not found' });
-    }
-
-    console.log('Appointment:', appt);
+    if (!appt) return res.status(404).json({ msg: 'Appointment not found' });
 
     const isUser = appt.user?.toString() === req.user.id;
     const isTherapist = appt.therapist?.toString() === req.user.id;
+    if (!isUser && !isTherapist) return res.status(403).json({ msg: 'Not authorized to cancel this appointment' });
 
-    if (!isUser && !isTherapist) {
-      console.log('Unauthorized attempt');
-      return res.status(403).json({ msg: 'Not authorized to cancel this appointment' });
-    }
-
-    console.log('making slot avaiblble again');
-
-    // Mark slot as available again
     const slot = await TherapistSlot.findById(appt.slot?._id);
     if (slot) {
       slot.isBooked = false;
@@ -100,15 +108,13 @@ export const cancelAppointment = async (req, res) => {
     }
 
     await Appointment.deleteOne({ _id: id });
-    console.log('Appointment successfully cancelled');
-
     res.json({ msg: 'Appointment cancelled' });
   } catch (err) {
-    console.error('Error during cancellation:', err);
     res.status(500).json({ msg: 'Cancellation failed' });
   }
 };
 
+// ✅ Therapist stats
 export const getTherapistStats = async (req, res) => {
   try {
     const therapistId = req.user.id;
@@ -116,8 +122,9 @@ export const getTherapistStats = async (req, res) => {
     const totalSlots = await TherapistSlot.countDocuments({ therapist: therapistId });
     const bookedSlots = await Appointment.countDocuments({ therapist: therapistId });
     const availableSlots = await TherapistSlot.countDocuments({ therapist: therapistId, isBooked: false });
+
     const uniqueUsers = await Appointment.aggregate([
-      { $match: { therapist: therapistId } },
+      { $match: { therapist: new mongoose.Types.ObjectId(therapistId) } },
       { $group: { _id: '$user' } }
     ]);
 
@@ -131,4 +138,3 @@ export const getTherapistStats = async (req, res) => {
     res.status(500).json({ msg: 'Failed to load stats' });
   }
 };
-

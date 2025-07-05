@@ -17,6 +17,7 @@ import MoodHistory from './pages/user/MoodHistory.jsx';
 import { useMood } from '../src/context/MoodContext.jsx';
 import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
 import AdminUpload from './pages/admin/AdminUpload.jsx';
+import ChatPage from './pages/Chat/ChatPage.jsx';
 
 export default function App() {
   const { user } = useAuth();
@@ -53,6 +54,8 @@ export default function App() {
         )}
 
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/Chat" element={<ChatPage />} />
+
       </Routes>
 
       {showMoodModal && (

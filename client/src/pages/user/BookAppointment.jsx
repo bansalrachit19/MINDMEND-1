@@ -3,25 +3,29 @@ import axios from 'axios';
 
 export default function BookAppointment() {
   const [slots, setSlots] = useState([]);
-  const [notes, setNotes] = useState({}); // track note per slot
+  const [notes, setNotes] = useState({});
 
   const fetchSlots = async () => {
     const token = localStorage.getItem('token');
-    const res = await axios.get('/api/bookings/slots', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setSlots(res.data);
+    try {
+      const res = await axios.get('/api/bookings/slots', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSlots(res.data);
+    } catch (err) {
+      console.error('❌ Failed to fetch slots', err);
+    }
   };
 
-  const book = async (slotId) => {
+  const book = async (slotId, therapistId) => {
     const token = localStorage.getItem('token');
     const note = notes[slotId] || '';
     try {
       await axios.post('/api/bookings/book', { slotId, note }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Appointment booked!');
-      fetchSlots();
+      alert('🎉 Appointment booked!');
+      fetchSlots(); // Refresh the slot list
     } catch (err) {
       alert(err.response?.data?.msg || 'Booking failed');
     }
@@ -32,9 +36,10 @@ export default function BookAppointment() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-purple-700 mb-4">Available Therapist Slots</h2>
-      <div className="grid md:grid-cols-2 gap-4 transition-all hover:scale-[1.02] duration-200">
+    <div className="p-6 min-h-screen bg-gradient-to-br from-emerald-50 to-purple-100">
+      <h2 className="text-3xl font-bold text-purple-700 mb-6 text-center">Available Therapist Slots</h2>
+
+      <div className="grid md:grid-cols-2 gap-6">
         {slots.map(slot => (
           <div key={slot._id} className="bg-white shadow rounded-xl p-4 border border-purple-100">
             <p className="font-medium text-purple-600">{slot.therapist.name}</p>
@@ -49,8 +54,8 @@ export default function BookAppointment() {
             />
 
             <button
-              onClick={() => book(slot._id)}
-              className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700"
+              onClick={() => book(slot._id, slot.therapist._id)}
+              className="mt-2 w-full bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition"
             >
               Book Appointment
             </button>

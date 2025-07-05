@@ -62,6 +62,10 @@ export default function TherapistDashboard() {
                     <h3 className="text-xl font-semibold text-purple-700">🗓 Calendar View</h3>
                     <p className="text-gray-600 mt-2">Track your slots and bookings visually.</p>
                 </Link>
+                <Link to="/therapist/chats" className="bg-white border-l-4 border-purple-300 shadow p-6 rounded-xl opacity-60 cursor-not-allowed">
+                <h3 className="text-xl font-semibold text-purple-700">💬 View Chats</h3>
+                <p className="text-gray-600 mt-2">Reply to messages from clients.</p>
+            </Link>
 
             </div>
         </div>

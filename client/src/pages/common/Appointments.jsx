@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const fetchAppointments = async () => {
     try {
@@ -22,7 +24,6 @@ export default function Appointments() {
     if (!confirm("Cancel this appointment?")) return;
     try {
       const token = localStorage.getItem("token");
-      console.log(id);
       await axios.delete(`/api/bookings/cancel/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -44,6 +45,7 @@ export default function Appointments() {
           ? "My Therapy Sessions"
           : "Your Scheduled Appointments"}
       </h2>
+
       <div className="space-y-4">
         {appointments.map((a) => (
           <div
@@ -70,13 +72,33 @@ export default function Appointments() {
               )}
             </div>
 
-            <div className="mt-4 text-right">
+            <div className="mt-4 flex justify-between items-center flex-wrap gap-2">
               <button
                 onClick={() => cancel(a._id)}
                 className="text-sm text-red-600 hover:underline"
               >
                 Cancel Appointment
               </button>
+
+              {user.role === "user" && (
+                <button
+                  onClick={() =>
+                    navigate(`/chat?therapist=${a.therapist._id}`)
+                  }
+                  className="text-sm bg-emerald-600 text-white px-3 py-1 rounded-lg hover:bg-emerald-700 transition"
+                >
+                  💬 Message Your Therapist
+                </button>
+              )}
+
+              {user.role === "therapist" && (
+                <button
+                  onClick={() => navigate(`/chat?therapist=${a.user._id}`)}
+                  className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition"
+                >
+                  💬 Message Client
+                </button>
+              )}
             </div>
           </div>
         ))}
