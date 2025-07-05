@@ -72,7 +72,8 @@ export default function Appointments() {
               )}
             </div>
 
-            <div className="mt-4 flex justify-between items-center flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-3 items-center justify-between">
+              {/* Cancel Button */}
               <button
                 onClick={() => cancel(a._id)}
                 className="text-sm text-red-600 hover:underline"
@@ -80,6 +81,7 @@ export default function Appointments() {
                 Cancel Appointment
               </button>
 
+              {/* Chat Buttons */}
               {user.role === "user" && (
                 <button
                   onClick={() =>
@@ -99,6 +101,14 @@ export default function Appointments() {
                   💬 Message Client
                 </button>
               )}
+
+              {/* Video Call Button */}
+              <button
+                onClick={() => navigate(`/video-call/${a._id}`)}
+                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition"
+              >
+                🎥 {user.role === "user" ? "Start Video Call" : "Join Video Call"}
+              </button>
             </div>
           </div>
         ))}

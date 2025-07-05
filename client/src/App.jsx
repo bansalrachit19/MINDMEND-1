@@ -18,6 +18,7 @@ import { useMood } from '../src/context/MoodContext.jsx';
 import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
 import AdminUpload from './pages/admin/AdminUpload.jsx';
 import ChatPage from './pages/Chat/ChatPage.jsx';
+import VideoCallPage from './pages/common/VideoCallcommon.jsx';
 
 export default function App() {
   const { user } = useAuth();
@@ -55,6 +56,8 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" />} />
         <Route path="/Chat" element={<ChatPage />} />
+        <Route path="/video-call/:roomId" element={<VideoCallPage />} />
+        <Route path="/video-call/:id" element={<VideoCallPage />} />
 
       </Routes>
 
