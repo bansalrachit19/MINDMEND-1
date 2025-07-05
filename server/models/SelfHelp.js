@@ -8,6 +8,12 @@ const selfHelpSchema = new mongoose.Schema({
     enum: ['video', 'article', 'guide', 'meditation', 'exercise'],
     default: 'article'
   },
+  suggestedFor: {
+    type: [String], // Example: ['happy', 'self', 'need']
+    default: []
+  },
+  isAI: { type: Boolean, default: false },
+  approved: { type: Boolean, default: false },
   link: String,
   description: String,
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

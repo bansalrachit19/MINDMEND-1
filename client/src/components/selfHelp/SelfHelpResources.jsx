@@ -16,7 +16,7 @@ export default function SelfHelpResources() {
 
   useEffect(() => {
     axios.get('/api/selfhelp/all')
-      .then(res => setResources(res.data))
+      .then(res => setResources(res.data.filter(r => r.approved)))
       .catch(err => console.error("Failed to load resources", err));
   }, []);
 

@@ -1,4 +1,5 @@
 import SelfHelp from '../models/SelfHelp.js';
+import MoodEntry from '../models/MoodEntry.js'; 
 
 export const createResource = async (req, res) => {
   try {
@@ -30,3 +31,78 @@ export const deleteResource = async (req, res) => {
     res.status(500).json({ msg: 'Delete failed' });
   }
 };
+
+export const suggestResourcesByAI = async (req, res) => {
+  const { category } = req.body; // 'happy', 'self', 'need'
+
+  const suggestions = {
+    happy: [
+      {
+        title: "Boost Productivity with Morning Routines",
+        type: "video",
+        link: "https://www.youtube.com/watch?v=happy-video",
+        description: "A cheerful video to supercharge your mornings.",
+        suggestedFor: ['happy'],
+        isAI: true,
+        approved: false
+      }
+    ],
+    self: [
+      {
+        title: "Deep Breathing to Calm Anxiety",
+        type: "meditation",
+        link: "https://www.youtube.com/watch?v=self-video",
+        description: "Guided breathing to reduce stress and clear the mind.",
+        suggestedFor: ['self'],
+        isAI: true,
+        approved: false
+      }
+    ],
+    need: [
+      {
+        title: "Coping with Depression: A Gentle Guide",
+        type: "article",
+        link: "https://example.com/need-article",
+        description: "An insightful read for when you need professional help.",
+        suggestedFor: ['need'],
+        isAI: true,
+        approved: false
+      }
+    ]
+  };
+
+  const toInsert = suggestions[category] || [];
+
+  const saved = await SelfHelp.insertMany(toInsert);
+  res.json(saved);
+};
+
+export const approveSelfHelpResource = async (req, res) => {
+  try {
+    await SelfHelp.findByIdAndUpdate(req.params.id, { approved: true });
+    res.json({ msg: 'Approved' });
+  } catch (err) {
+    res.status(500).json({ msg: 'Error approving resource' });
+  }
+};
+
+export const getResourcesForUserMood = async (req, res) => {
+  try {
+    const latestMood = await MoodEntry.findOne({ user: req.user._id }).sort({ date: -1 });
+    if (!latestMood || !latestMood.mood) {
+      return res.json([]); // fallback for users with no mood data
+    }
+
+    const resources = await SelfHelp.find({
+      approved: true,
+      suggestedFor: latestMood.mood
+    });
+
+    res.json(resources);
+  } catch (err) {
+    console.error('❌ Failed to fetch user-matched resources:', err);
+    res.status(500).json({ msg: 'Error fetching resources' });
+  }
+};
+
+
