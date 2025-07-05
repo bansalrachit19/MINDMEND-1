@@ -14,9 +14,10 @@ import CalendarView from './pages/user/CalendarView.jsx';
 import TherapistCalendar from './pages/therapist/CalendarView.jsx';
 import MoodTracker from './pages/user/MoodTracker.jsx';
 import MoodHistory from './pages/user/MoodHistory.jsx';
-import { useMood } from '../src/context/MoodContext.jsx';
+import { useMood } from './context/MoodContext.jsx';
 import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
 import AdminUpload from './pages/admin/AdminUpload.jsx';
+import CommunityForum from './pages/forum/CommunityForum.jsx';
 import ChatPage from './pages/Chat/ChatPage.jsx';
 import VideoCallPage from './pages/common/VideoCallcommon.jsx';
 
@@ -29,7 +30,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
         <Route path="/register" element={<Register />} />
-        
+
+        {/* 🔐 User Routes */}
         {user && user.role === 'user' && (
           <Route path="/user" element={<UserLayout user={user} />}>
             <Route index element={<UserDashboard />} />
@@ -38,8 +40,12 @@ export default function App() {
             <Route path="calendar" element={<CalendarView />} />
             <Route path="mood" element={<MoodTracker />} />
             <Route path="mood-history" element={<MoodHistory />} />
+            <Route path="forum" element={<CommunityForum />} />
+            <Route path="chat" element={<ChatPage />} />
           </Route>
         )}
+
+        {/* 🔐 Therapist Routes */}
         {user && user.role === 'therapist' && (
           <Route path="/therapist" element={<TherapistLayout user={user} />}>
             <Route index element={<TherapistDashboard />} />
@@ -48,12 +54,15 @@ export default function App() {
             <Route path="calendar" element={<TherapistCalendar />} />
           </Route>
         )}
+
+        {/* 🔐 Admin Routes */}
         {user && user.role === 'admin' && (
           <Route path="/admin" element={<AdminLayout user={user} />}>
-            <Route path="/admin" element={<AdminUpload />} />
+            <Route index element={<AdminUpload />} />
           </Route>
         )}
 
+        {/* 🚫 Catch-all */}
         <Route path="*" element={<Navigate to="/" />} />
         <Route path="/Chat" element={<ChatPage />} />
         <Route path="/video-call/:roomId" element={<VideoCallPage />} />
@@ -61,12 +70,10 @@ export default function App() {
 
       </Routes>
 
+      {/* 😶‍🌫️ Global Mood Modal */}
       {showMoodModal && (
         <MoodAssessmentModal onComplete={() => setShowMoodModal(false)} />
       )}
-
     </>
-
-    
   );
 }

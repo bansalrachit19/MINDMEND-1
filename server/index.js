@@ -18,6 +18,7 @@ import moodRoutes from './routes/moodRoutes.js';
 import resourceRoutes from './routes/resourceRoutes.js';
 import selfHelpRoutes from './routes/selfHelpRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import forumRoutes from './routes/forumRoutes.js';
 
 // Cron job
 import cron from 'node-cron';
@@ -46,6 +47,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/mood', moodRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/selfhelp', selfHelpRoutes);
+app.use('/api/forum', forumRoutes);
 app.use('/api/messages', messageRoutes);
 
 // MongoDB connection
