@@ -21,6 +21,7 @@ import selfHelpRoutes from './routes/selfHelpRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import  tipRoutes from './routes/tips.js';
 
 // Cron job
 import cron from 'node-cron';
@@ -47,6 +48,7 @@ app.use('/api/selfhelp', selfHelpRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/tips', tipRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)

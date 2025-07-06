@@ -9,6 +9,8 @@ export const createResource = async (req, res) => {
       type,
       link,
       description,
+      approved: true,
+      isAI: false,
       createdBy: req.user.id
     });
     await newResource.save();

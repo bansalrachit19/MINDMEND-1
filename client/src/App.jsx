@@ -1,12 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import { useMood } from './context/MoodContext';
+
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import Welcome from './pages/Welcome.jsx';
+
 import UserDashboard from './pages/user/UserDashboard.jsx';
 import TherapistDashboard from './pages/therapist/TherapistDashboard.jsx';
-import UserLayout from './layouts/UserLayout.jsx';
-import TherapistLayout from './layouts/TherapistLayout.jsx';
-import AdminLayout from './layouts/AdminLayout.jsx';
-import { useAuth } from './context/AuthContext';
 import CreateSlot from './pages/therapist/CreateSlot.jsx';
 import BookAppointment from './pages/user/BookAppointment.jsx';
 import Appointments from './pages/common/Appointments.jsx';
@@ -14,12 +15,16 @@ import CalendarView from './pages/user/CalendarView.jsx';
 import TherapistCalendar from './pages/therapist/CalendarView.jsx';
 import MoodTracker from './pages/user/MoodTracker.jsx';
 import MoodHistory from './pages/user/MoodHistory.jsx';
-import { useMood } from './context/MoodContext.jsx';
-import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
-import AdminUpload from './pages/admin/AdminUpload.jsx';
 import CommunityForum from './pages/forum/CommunityForum.jsx';
 import ChatPage from './pages/Chat/ChatPage.jsx';
 import VideoCallPage from './pages/common/VideoCallcommon.jsx';
+
+import UserLayout from './layouts/UserLayout.jsx';
+import TherapistLayout from './layouts/TherapistLayout.jsx';
+import AdminLayout from './layouts/AdminLayout.jsx';
+import AdminUpload from './pages/admin/AdminUpload.jsx';
+
+import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
 
 export default function App() {
   const { user } = useAuth();
@@ -28,10 +33,15 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
-        <Route path="/register" element={<Register />} />
 
-        {/* 🔐 User Routes */}
+        {/* 🌟 Welcome Landing Page */}
+        <Route path="/" element={<Welcome />} />
+
+        {/* 🛂 Public Auth Routes */}
+        <Route path="/login" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to={`/${user.role}`} /> : <Register />} />
+
+        {/* 👤 User Routes */}
         {user && user.role === 'user' && (
           <Route path="/user" element={<UserLayout user={user} />}>
             <Route index element={<UserDashboard />} />
@@ -45,7 +55,7 @@ export default function App() {
           </Route>
         )}
 
-        {/* 🔐 Therapist Routes */}
+        {/* 👨‍⚕️ Therapist Routes */}
         {user && user.role === 'therapist' && (
           <Route path="/therapist" element={<TherapistLayout user={user} />}>
             <Route index element={<TherapistDashboard />} />
@@ -56,7 +66,7 @@ export default function App() {
           </Route>
         )}
 
-        {/* 🔐 Admin Routes */}
+        {/* 🛡 Admin Routes */}
         {user && user.role === 'admin' && (
           <Route path="/admin" element={<AdminLayout user={user} />}>
             <Route index element={<AdminUpload />} />
@@ -64,15 +74,16 @@ export default function App() {
           </Route>
         )}
 
-        {/* 🚫 Catch-all */}
-        <Route path="*" element={<Navigate to="/" />} />
-        <Route path="/Chat" element={<ChatPage />} />
+        {/* 📹 Global Chat & Video (Accessible to All Roles) */}
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="/video-call/:roomId" element={<VideoCallPage />} />
         <Route path="/video-call/:id" element={<VideoCallPage />} />
 
+        {/* 🔁 Catch-All Redirect */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
-      {/* 😶‍🌫️ Global Mood Modal */}
+      {/* 🧠 Global Mood Assessment Modal */}
       {showMoodModal && (
         <MoodAssessmentModal onComplete={() => setShowMoodModal(false)} />
       )}
