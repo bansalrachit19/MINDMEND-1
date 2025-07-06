@@ -1,38 +1,68 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { motion } from "framer-motion";
 import MoodAssessmentModal from '../../components/user/MoodAssessmentModal';
 import HappyRecommendations from '../../components/user/HappyRecommendations';
 import SelfHealTools from '../../components/user/SelfHealTools';
 import TherapistRecommendations from '../../components/user/TherapistRecommendations';
 import MoodSummaryWidget from '../../components/mood/MoodSummaryWidget';
 import SelfHelpResources from '../../components/selfHelp/SelfHelpResources';
+import { Book, PlayCircle, Heart, Brain, Dumbbell } from 'lucide-react';
 
 export default function UserDashboard() {
-  const [category, setCategory] = useState(() => {
-    const stored = localStorage.getItem('moodCategory');
-    return stored && stored !== 'null' ? stored : null;
-  });
+  // const [category, setCategory] = useState(() => {
+  //   const stored = localStorage.getItem('moodCategory');
+  //   return stored && stored !== 'null' ? stored : null;
+  // });
+
+  const [category, setCategory] = useState(null);
+  const [lastChecked, setLastChecked] = useState(null);
 
   const [showModal, setShowModal] = useState(() => {
     const last = localStorage.getItem('lastMoodCheck');
     return !last || (Date.now() - parseInt(last)) > 24 * 60 * 60 * 1000;
   });
 
+    useEffect(() => {
+      const cat = localStorage.getItem('moodCategory');
+      const time = localStorage.getItem('lastMoodCheck');
+      if (cat) setCategory(cat);
+      if (time) setLastChecked(parseInt(time));
+    }, []);
+
   const [personalized, setPersonalized] = useState([]);
 
-  const handleAssessmentComplete = (cat) => {
-    setCategory(cat);
+    // const [lastChecked, setLastChecked] = useState(() => {
+    //   const stored = localStorage.getItem('lastMoodCheck');
+    //   return stored ? parseInt(stored) : null;
+    // });
+
+  const handleAssessmentComplete = (cat, timestamp) => {
     localStorage.setItem('moodCategory', cat);
-    localStorage.setItem('lastMoodCheck', Date.now().toString());
+    localStorage.setItem('lastMoodCheck', timestamp.toString());
+    //const now = Date.now();
+    setCategory(cat);
+    setLastChecked(timestamp);
+    // localStorage.setItem('moodCategory', cat);
+    // localStorage.setItem('lastMoodCheck', now.toString());
     setShowModal(false);
   };
+
+  const icons = {
+    video: <PlayCircle className="text-purple-500 w-6 h-6" />,
+    article: <Book className="text-purple-500 w-6 h-6" />,
+    meditation: <Brain className="text-purple-500 w-6 h-6" />,
+    guide: <Heart className="text-purple-500 w-6 h-6" />,
+    exercise: <Dumbbell className="text-purple-500 w-6 h-6" />
+  };
+
 
   useEffect(() => {
     const fetchPersonalized = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.warn("🚫 No token found. Skipping personalized fetch.");
+        console.warn("No token found. Skipping personalized fetch.");
         return;
       }
 
@@ -40,9 +70,10 @@ export default function UserDashboard() {
         const res = await axios.get('/api/selfhelp/user-matches', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('🎯 Personalized resources:', res.data);
         setPersonalized(res.data);
       } catch (err) {
-        console.error('❌ Failed to fetch personalized resources:', err);
+        console.error('Failed to fetch personalized resources:', err);
       }
     };
 
@@ -54,10 +85,17 @@ export default function UserDashboard() {
     <div className="p-6">
       <h2 className="text-3xl font-bold text-purple-700 mb-6">Welcome to Your Wellness Dashboard</h2>
 
-      <MoodSummaryWidget
-        mood={category}
-        lastChecked={localStorage.getItem('lastMoodCheck')}
-      />
+      <motion.div
+        key={`${category}-${lastChecked}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <MoodSummaryWidget
+          mood={category}
+          lastChecked={lastChecked}
+        />
+      </motion.div>
 
       {showModal && <MoodAssessmentModal onComplete={handleAssessmentComplete} />}
 
@@ -74,14 +112,28 @@ export default function UserDashboard() {
         <div className="mt-10">
           <h3 className="text-2xl font-semibold text-purple-700 mb-4">🧘 Personalized Self-Help Picks</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {personalized.map(r => (
-              <div key={r._id} className="bg-white p-4 rounded-2xl shadow-lg border">
-                <h4 className="font-bold text-purple-800 mb-1">{r.title} ({r.type})</h4>
-                <p className="text-sm text-gray-600 mb-2">{r.description}</p>
-                <a href={r.link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm">
-                  View Resource ↗
+            {personalized.map((r, i) => (
+              <motion.div
+                key={r._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white p-5 rounded-2xl shadow-md border border-purple-100 hover:shadow-lg transition"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  {icons[r.type] || <Book className="text-purple-500 w-6 h-6" />}
+                  <h4 className="font-bold text-purple-800 text-lg">{r.title}</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">{r.description}</p>
+                <a
+                  href={r.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-purple-600 font-medium hover:underline text-sm"
+                >
+                  View Resource →
                 </a>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

@@ -43,7 +43,9 @@ export const getMoodStats = async (req, res) => {
 
 export const saveMoodAnswers = async (req, res) => {
   const userId = req.user.id;
+  console.log(userId);
   const { answers, score, category } = req.body;
+  console.log(answers, score, category);
 
   try {
     const user = await User.findByIdAndUpdate(userId, {

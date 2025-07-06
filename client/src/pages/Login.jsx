@@ -13,6 +13,7 @@ export default function Login() {
     try {
       const res = await axios.post('/api/auth/login', form);
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       setUser(res.data.user);
       navigate(`/${res.data.user.role}`);
     } catch (err) {

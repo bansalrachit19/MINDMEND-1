@@ -10,6 +10,7 @@ import './config/passport.js';
 
 import http from 'http'; // 👈 For socket.io
 import { Server } from 'socket.io';
+import { initSocket } from './socket.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -19,20 +20,16 @@ import resourceRoutes from './routes/resourceRoutes.js';
 import selfHelpRoutes from './routes/selfHelpRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Cron job
 import cron from 'node-cron';
 import { sendUpcomingReminders } from './cron/sendReminders.js';
 
 const app = express();
+
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
-});
+initSocket(server);
 
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -49,6 +46,7 @@ app.use('/api/resources', resourceRoutes);
 app.use('/api/selfhelp', selfHelpRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/users', userRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
@@ -68,29 +66,29 @@ cron.schedule('0 * * * *', () => {
 // ==========================
 // 👇 Socket.IO for Video Call
 // ==========================
-io.on('connection', (socket) => {
-  console.log('✅ New socket connected:', socket.id);
+// io.on('connection', (socket) => {
+//   console.log('✅ New socket connected:', socket.id);
 
-  socket.on('join-room', (data) => {
-    if (!data || !data.roomId) {
-      console.error("❌ Invalid join-room payload:", data);
-      return;
-    }
+//   socket.on('join-room', (data) => {
+//     if (!data || !data.roomId) {
+//       console.error("❌ Invalid join-room payload:", data);
+//       return;
+//     }
 
-    const { roomId } = data;
-    socket.join(roomId);
-    socket.to(roomId).emit('user-joined', socket.id);
-  });
+//     const { roomId } = data;
+//     socket.join(roomId);
+//     socket.to(roomId).emit('user-joined', socket.id);
+//   });
 
-  socket.on('call-user', ({ userToCall, signalData, from }) => {
-    io.to(userToCall).emit('incoming-call', { signal: signalData, from });
-  });
+//   socket.on('call-user', ({ userToCall, signalData, from }) => {
+//     io.to(userToCall).emit('incoming-call', { signal: signalData, from });
+//   });
 
-  socket.on('answer-call', ({ to, signal }) => {
-    io.to(to).emit('call-accepted', signal);
-  });
+//   socket.on('answer-call', ({ to, signal }) => {
+//     io.to(to).emit('call-accepted', signal);
+//   });
 
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected:', socket.id);
-  });
-});
+//   socket.on('disconnect', () => {
+//     console.log('❌ Socket disconnected:', socket.id);
+//   });
+// });

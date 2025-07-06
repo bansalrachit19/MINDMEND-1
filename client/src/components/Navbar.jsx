@@ -20,7 +20,7 @@ export default function Navbar({ name, role }) {
     <nav className="bg-gradient-to-r from-purple-100 to-purple-300 p-4 shadow-md flex justify-between items-center rounded-b-2xl">
       <h1 className="text-2xl font-bold text-purple-800">MindMend</h1>
       <div className="flex items-center gap-4">
-        <Link to="/user/forum" className="text-purple-600 hover:underline">💬 Community Forum</Link>
+        <Link to={`/${role}/forum`} className="text-purple-600 hover:underline">💬 Community Forum</Link>
         {/* <Link to="#" onClick={() => setShowMoodModal(true)} className="text-2xl">🧠</Link> */}
         <p className="text-purple-700 font-medium capitalize">{role} • {name}</p>
         <button onClick={logout} className="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700">

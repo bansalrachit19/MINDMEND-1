@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const questions = [
   { id: 1, q: "How have you been sleeping lately?", weight: { happy: 0, self: 1, need: 2 } },
@@ -30,7 +31,7 @@ export default function MoodAssessmentModal({ onComplete }) {
       setStep(step + 1);
     } else {
       const finalCategory = Object.entries(newScores).sort((a, b) => b[1] - a[1])[0][0];
-      setShow(false);
+      //setShow(false);
 
       try {
         const token = localStorage.getItem('token');
@@ -55,9 +56,12 @@ export default function MoodAssessmentModal({ onComplete }) {
           console.warn("⚠️ No valid 'user' found in localStorage.");
         }
 
+        const now = Date.now();
         localStorage.setItem('moodCategory', finalCategory);
-        localStorage.setItem('lastMoodCheck', Date.now().toString());
-        onComplete(finalCategory);
+        localStorage.setItem('lastMoodCheck', now.toString());
+        onComplete(finalCategory, now);
+        toast.success("✅ Mood logged successfully!");
+        //setShow(false);
 
       } catch (err) {
         console.error("❌ Failed to save mood data", err);

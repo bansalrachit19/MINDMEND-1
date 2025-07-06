@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:5000', { withCredentials: true });
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
   const [receiverName, setReceiverName] = useState('');
   const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef(null);
 
   const searchParams = new URLSearchParams(useLocation().search);
-  const receiverId = searchParams.get('therapist'); // for therapist message access
+  const receiverId = searchParams.get('therapist');
 
   const fetchMessages = async () => {
     try {
@@ -47,8 +51,8 @@ export default function ChatPage() {
         { receiverId, content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      socket.emit('send-message', { roomId: receiverId, message: content });
       setContent('');
-      fetchMessages();
     } catch (err) {
       console.error('Failed to send message', err);
     }
@@ -57,9 +61,22 @@ export default function ChatPage() {
   useEffect(() => {
     fetchMessages();
     fetchReceiverDetails();
-    const interval = setInterval(fetchMessages, 5000); // poll every 5s
-    return () => clearInterval(interval);
+
+    socket.emit('join-room', { roomId: receiverId });
+
+    socket.on('receive-message', (message) => {
+      setMessages((prev) => [...prev, { content: message, sender: receiverId }]);
+    });
+
+    return () => {
+      socket.off('receive-message');
+      socket.disconnect();
+    };
   }, [receiverId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 to-emerald-100 p-6">
@@ -73,9 +90,9 @@ export default function ChatPage() {
         ) : messages.length === 0 ? (
           <p className="text-gray-400 text-center">No messages yet</p>
         ) : (
-          messages.map((msg) => (
+          messages.map((msg, index) => (
             <div
-              key={msg._id}
+              key={index}
               className={`mb-3 flex ${
                 msg.sender === receiverId ? 'justify-start' : 'justify-end'
               }`}
@@ -92,6 +109,7 @@ export default function ChatPage() {
             </div>
           ))
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="flex items-center space-x-2">

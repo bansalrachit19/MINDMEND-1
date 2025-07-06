@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import TherapistSlot from '../models/TherapistSlot.js';
 import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';

@@ -52,6 +52,7 @@ export default function App() {
             <Route path="create-slot" element={<CreateSlot />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="calendar" element={<TherapistCalendar />} />
+            <Route path="forum" element={<CommunityForum />} />
           </Route>
         )}
 
@@ -59,6 +60,7 @@ export default function App() {
         {user && user.role === 'admin' && (
           <Route path="/admin" element={<AdminLayout user={user} />}>
             <Route index element={<AdminUpload />} />
+            <Route path="forum" element={<CommunityForum />} />
           </Route>
         )}
 

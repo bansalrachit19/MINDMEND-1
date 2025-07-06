@@ -19,10 +19,12 @@ export default function AdminUpload() {
 
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    if (user === null) return;
-    if (!user?.isAdmin) navigate('/');
-  }, [user, navigate]);
+  // useEffect(() => {
+  //   if (user === null) return; // Wait until user context loads
+  //    if (!user?.isAdmin) navigate('/');
+  // }, [user, navigate]);
+
+
 
   const fetchResources = async () => {
     try {

@@ -89,6 +89,7 @@ export const approveSelfHelpResource = async (req, res) => {
 export const getResourcesForUserMood = async (req, res) => {
   try {
     const latestMood = await MoodEntry.findOne({ user: req.user._id }).sort({ date: -1 });
+    console.log(latestMood);
     if (!latestMood || !latestMood.mood) {
       return res.json([]); // fallback for users with no mood data
     }
