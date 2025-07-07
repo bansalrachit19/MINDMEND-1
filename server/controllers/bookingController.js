@@ -28,22 +28,11 @@ export const createSlot = async (req, res) => {
   }
 };
 
-// ✅ Get Available Slots (includes ones booked by current user)
+// ✅ Get Available Slots (Only Unbooked)
 export const getSlots = async (req, res) => {
   try {
-    const allSlots = await TherapistSlot.find().populate('therapist', 'name');
-
-    const myAppointments = await Appointment.find({ user: req.user.id }).select('slot');
-    const myBookedSlotIds = new Set(myAppointments.map(appt => appt.slot.toString()));
-
-    const result = allSlots
-      .filter(slot => !slot.isBooked || myBookedSlotIds.has(slot._id.toString()))
-      .map(slot => ({
-        ...slot.toObject(),
-        bookedByMe: myBookedSlotIds.has(slot._id.toString())
-      }));
-
-    res.json(result);
+    const slots = await TherapistSlot.find({ isBooked: false }).populate('therapist', 'name');
+    res.json(slots);
   } catch (err) {
     console.error('❌ Failed to fetch slots:', err);
     res.status(500).json({ msg: 'Failed to fetch slots' });
@@ -77,14 +66,13 @@ export const bookAppointment = async (req, res) => {
   }
 };
 
-// ✅ Get Appointments for Current User or Therapist (Includes Review Info)
+// ✅ Get Appointments (with Review Info)
 export const getMyAppointments = async (req, res) => {
   try {
     const query = req.user.role === 'user'
       ? { user: req.user.id }
       : { therapist: req.user.id };
 
-    // Get appointments
     const appointments = await Appointment.find(query)
       .populate('slot')
       .populate('user', 'name')
@@ -92,19 +80,16 @@ export const getMyAppointments = async (req, res) => {
       .lean();
 
     const appointmentIds = appointments.map(a => a._id);
-    
-    // Get reviews for those appointments
+
     const reviews = await Review.find({ session: { $in: appointmentIds } })
       .populate('user', 'name')
       .lean();
 
-    // Map sessionId => review
     const reviewMap = {};
     for (const r of reviews) {
       reviewMap[r.session.toString()] = r;
     }
 
-    // Attach review to each appointment
     const enrichedAppointments = appointments.map(appt => ({
       ...appt,
       review: reviewMap[appt._id.toString()] || null,
@@ -117,7 +102,7 @@ export const getMyAppointments = async (req, res) => {
   }
 };
 
-// ✅ Cancel Appointment (By User or Therapist)
+// ✅ Cancel Appointment
 export const cancelAppointment = async (req, res) => {
   const { id } = req.params;
 
