@@ -1,13 +1,15 @@
 import mongoose from 'mongoose';
 import TherapistSlot from '../models/TherapistSlot.js';
 import Appointment from '../models/Appointment.js';
+import Review from '../models/Review.js';
 import User from '../models/User.js';
 
-// ✅ Create a new slot (therapist only)
+// ✅ Create Slot (Therapist Only)
 export const createSlot = async (req, res) => {
   if (req.user.role !== 'therapist') return res.status(403).json({ msg: 'Unauthorized' });
 
   const { date, time, duration } = req.body;
+
   try {
     const exists = await TherapistSlot.findOne({ therapist: req.user.id, date, time });
     if (exists) return res.status(400).json({ msg: 'Slot already exists' });
@@ -16,16 +18,17 @@ export const createSlot = async (req, res) => {
       therapist: req.user.id,
       date,
       time,
-      duration: duration || 30
+      duration: duration || 30,
     });
 
     res.json(slot);
   } catch (err) {
+    console.error('❌ Error creating slot:', err);
     res.status(500).json({ msg: 'Error creating slot' });
   }
 };
 
-// ✅ Get available slots (include those booked by current user)
+// ✅ Get Available Slots (includes ones booked by current user)
 export const getSlots = async (req, res) => {
   try {
     const allSlots = await TherapistSlot.find().populate('therapist', 'name');
@@ -42,11 +45,12 @@ export const getSlots = async (req, res) => {
 
     res.json(result);
   } catch (err) {
+    console.error('❌ Failed to fetch slots:', err);
     res.status(500).json({ msg: 'Failed to fetch slots' });
   }
 };
 
-// ✅ Book an appointment (user only)
+// ✅ Book Appointment (User Only)
 export const bookAppointment = async (req, res) => {
   if (req.user.role !== 'user') return res.status(403).json({ msg: 'Unauthorized' });
 
@@ -60,7 +64,7 @@ export const bookAppointment = async (req, res) => {
       user: req.user.id,
       therapist: slot.therapist,
       slot: slot._id,
-      note
+      note,
     });
 
     slot.isBooked = true;
@@ -68,29 +72,52 @@ export const bookAppointment = async (req, res) => {
 
     res.json(appointment);
   } catch (err) {
+    console.error('❌ Booking failed:', err);
     res.status(500).json({ msg: 'Booking failed' });
   }
 };
 
-// ✅ Get all appointments for current user or therapist
+// ✅ Get Appointments for Current User or Therapist (Includes Review Info)
 export const getMyAppointments = async (req, res) => {
   try {
     const query = req.user.role === 'user'
       ? { user: req.user.id }
       : { therapist: req.user.id };
 
+    // Get appointments
     const appointments = await Appointment.find(query)
       .populate('slot')
       .populate('user', 'name')
-      .populate('therapist', 'name');
+      .populate('therapist', 'name')
+      .lean();
 
-    res.json(appointments);
+    const appointmentIds = appointments.map(a => a._id);
+    
+    // Get reviews for those appointments
+    const reviews = await Review.find({ session: { $in: appointmentIds } })
+      .populate('user', 'name')
+      .lean();
+
+    // Map sessionId => review
+    const reviewMap = {};
+    for (const r of reviews) {
+      reviewMap[r.session.toString()] = r;
+    }
+
+    // Attach review to each appointment
+    const enrichedAppointments = appointments.map(appt => ({
+      ...appt,
+      review: reviewMap[appt._id.toString()] || null,
+    }));
+
+    res.json(enrichedAppointments);
   } catch (err) {
+    console.error('❌ Failed to fetch appointments:', err);
     res.status(500).json({ msg: 'Could not fetch appointments' });
   }
 };
 
-// ✅ Cancel an appointment (by user or therapist)
+// ✅ Cancel Appointment (By User or Therapist)
 export const cancelAppointment = async (req, res) => {
   const { id } = req.params;
 
@@ -111,11 +138,12 @@ export const cancelAppointment = async (req, res) => {
     await Appointment.deleteOne({ _id: id });
     res.json({ msg: 'Appointment cancelled' });
   } catch (err) {
+    console.error('❌ Cancellation failed:', err);
     res.status(500).json({ msg: 'Cancellation failed' });
   }
 };
 
-// ✅ Therapist stats
+// ✅ Therapist Stats
 export const getTherapistStats = async (req, res) => {
   try {
     const therapistId = req.user.id;
@@ -136,6 +164,7 @@ export const getTherapistStats = async (req, res) => {
       uniqueUsers: uniqueUsers.length
     });
   } catch (err) {
+    console.error('❌ Failed to load stats:', err);
     res.status(500).json({ msg: 'Failed to load stats' });
   }
 };

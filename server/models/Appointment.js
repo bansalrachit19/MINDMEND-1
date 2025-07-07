@@ -36,6 +36,10 @@ const appointmentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+review: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Review",
+},
   createdAt: {
     type: Date,
     default: Date.now,

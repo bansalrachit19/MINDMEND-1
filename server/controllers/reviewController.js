@@ -56,3 +56,21 @@ export const getReviewForSession = async (req, res) => {
   }
 };
 
+export const submitReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const appointment = await Appointment.findById(req.params.appointmentId);
+
+    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+    if (appointment.reviewed) return res.status(400).json({ message: "Already reviewed" });
+
+    appointment.review = { rating, comment };
+    appointment.reviewed = true;
+    await appointment.save();
+
+    res.status(200).json({ message: "Review submitted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+

@@ -40,16 +40,14 @@ export default function Appointments() {
     }
   };
 
-  // 🧠 Utility to check if session is currently active
   const isSessionActive = (dateStr, timeStr) => {
     const start = new Date(`${dateStr}T${timeStr}`);
     const now = new Date();
-    return now >= new Date(start.getTime() - 5 * 60 * 1000) && now <= new Date(start.getTime() + 45 * 60 * 1000);
+    return now >= new Date(start.getTime() - 5 * 60 * 1000) &&
+           now <= new Date(start.getTime() + 45 * 60 * 1000);
   };
 
-  const isPast = (dateStr, timeStr) => {
-    return new Date() > new Date(`${dateStr}T${timeStr}`);
-  };
+  const isPast = (dateStr, timeStr) => new Date() > new Date(`${dateStr}T${timeStr}`);
 
   return (
     <div className="p-6">
@@ -75,7 +73,7 @@ export default function Appointments() {
               </div>
 
               <div className="flex flex-wrap gap-3 items-center justify-between">
-                {/* Cancel Button */}
+                {/* ❌ Cancel Button */}
                 {!appt.completed && (
                   <button
                     onClick={() => cancelAppointment(appt._id)}
@@ -85,7 +83,7 @@ export default function Appointments() {
                   </button>
                 )}
 
-                {/* Message Button */}
+                {/* 💬 Message */}
                 <button
                   onClick={() =>
                     navigate(`/chat?therapist=${user.role === "user" ? appt.therapist._id : appt.user._id}`)
@@ -95,7 +93,7 @@ export default function Appointments() {
                   💬 Message {user.role === "user" ? "Your Therapist" : "Client"}
                 </button>
 
-                {/* 🎥 Video Call Button */}
+                {/* 🎥 Video Call */}
                 {appt.completed ? (
                   <span className="text-sm text-green-600">✅ Session Completed</span>
                 ) : sessionActive ? (
@@ -111,8 +109,8 @@ export default function Appointments() {
                   <span className="text-sm text-gray-500">🕒 Not yet time</span>
                 )}
 
-                {/* ⭐ Review Button */}
-                {user.role === "user" && appt.completed && !appt.reviewed && (
+                {/* ⭐ Review Button (only for users, after sessionActive or completed, if not reviewed) */}
+                {user.role === "user" && !appt.reviewed && (sessionActive || appt.completed) && (
                   <button
                     onClick={() =>
                       setSelectedAppointment({
@@ -125,13 +123,38 @@ export default function Appointments() {
                     ⭐ Leave a Review
                   </button>
                 )}
+
+                {/* ✅ User Sees Their Submitted Review */}
+                {user.role === "user" && appt.reviewed && appt.review && (
+                  <div className="text-sm text-gray-800">
+                    <p><strong>⭐ Your Rating:</strong> {appt.review.rating}/5</p>
+                       {appt.review.text ? (
+      <p><strong>📝 Your Review:</strong> {appt.review.text}</p>
+    ) : (
+      <p className="text-gray-400 italic">No review text provided.</p>
+    )}
+                  </div>
+                )}
+
+                {/* 👨‍⚕️ Therapist Sees Client Review */}
+                {user.role === "therapist" && appt.review && (
+                  <div className="text-sm text-gray-800">
+                    <p><strong>⭐ Rating:</strong> {appt.review.rating}/5</p>
+                       {appt.review.text ? (
+      <p><strong>📝 Your Review:</strong> {appt.review.text}</p>
+    ) : (
+      <p className="text-gray-400 italic">No review text provided.</p>
+    )}
+                    <p><strong>👤 By:</strong> {appt.review.user?.name || "Client"}</p>
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Review Modal */}
+      {/* ⭐ Review Modal */}
       {selectedAppointment && (
         <ReviewModal
           isOpen={!!selectedAppointment}
