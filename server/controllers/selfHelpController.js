@@ -42,7 +42,7 @@ export const suggestResourcesByAI = async (req, res) => {
       {
         title: "Boost Productivity with Morning Routines",
         type: "video",
-        link: "https://www.youtube.com/watch?v=happy-video",
+        link: "https://youtu.be/mMGhOeFQIv8?si=0VvM8bcDbj1mevqu",
         description: "A cheerful video to supercharge your mornings.",
         suggestedFor: ['happy'],
         isAI: true,

@@ -164,6 +164,11 @@ export default function UserDashboard() {
           <h3 className="text-xl font-semibold text-purple-700">📈 Mood History</h3>
           <p className="text-gray-600 mt-2">See your mood trends over time.</p>
         </Link>
+
+        <Link to="/user/breathing" className="bg-white border-l-4 border-purple-500 shadow p-6 rounded-xl hover:shadow-lg transition">
+          <h3 className="text-xl font-semibold text-purple-700">🌬️ Breathing Exercise</h3>
+          <p className="text-gray-600 mt-2">Calm your mind with guided breathing animations.</p>
+        </Link>
       </div>
 
       <SelfHelpResources />

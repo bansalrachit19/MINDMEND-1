@@ -15,6 +15,7 @@ import CalendarView from './pages/user/CalendarView.jsx';
 import TherapistCalendar from './pages/therapist/CalendarView.jsx';
 import MoodTracker from './pages/user/MoodTracker.jsx';
 import MoodHistory from './pages/user/MoodHistory.jsx';
+import BreathingExercise from './pages/user/BreathingExercise.jsx';
 import CommunityForum from './pages/forum/CommunityForum.jsx';
 import ChatPage from './pages/Chat/ChatPage.jsx';
 import VideoCallPage from './pages/common/VideoCallcommon.jsx';
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="mood-history" element={<MoodHistory />} />
             <Route path="forum" element={<CommunityForum />} />
             <Route path="chat" element={<ChatPage />} />
+            <Route path="breathing" element={<BreathingExercise />} />
           </Route>
         )}
 
