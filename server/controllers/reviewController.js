@@ -4,7 +4,7 @@ import Appointment from '../models/Appointment.js';
 export const leaveReview = async (req, res) => {
   try {
     const { therapistId, rating, text } = req.body;
-    const sessionId = req.params.appointmentId; // ✅ Get session/appointment from URL
+    const sessionId = req.params.appointmentId;
     const userId = req.user.id;
 
     const alreadyReviewed = await Review.findOne({ user: userId, session: sessionId });
@@ -19,6 +19,8 @@ export const leaveReview = async (req, res) => {
       rating,
       text,
     });
+
+    await Appointment.findByIdAndUpdate(sessionId, { reviewed: true });
 
     res.status(201).json(review);
   } catch (err) {
@@ -42,3 +44,15 @@ export const getTherapistReviews = async (req, res) => {
     res.status(500).json({ msg: 'Failed to fetch reviews' });
   }
 };
+
+
+export const getReviewForSession = async (req, res) => {
+  try {
+    const review = await Review.findOne({ session: req.params.sessionId }).populate("user", "name");
+    if (!review) return res.status(404).json({ msg: "No review yet" });
+    res.json(review);
+  } catch (err) {
+    res.status(500).json({ msg: "Failed to fetch review" });
+  }
+};
+

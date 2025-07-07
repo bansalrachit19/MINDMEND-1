@@ -9,53 +9,69 @@ export default function VideoCallPage() {
 
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
-  const peerRef = useRef(null);
-  const socketRef = useRef(null);
-  const localStreamRef = useRef(null);
+  const peerRef = useRef();
+  const socketRef = useRef();
+  const localStreamRef = useRef();
 
   const [connected, setConnected] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
 
   useEffect(() => {
+    const checkAccess = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/bookings/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      const now = new Date();
+      const startTime = new Date(data.startTime);
+
+      if (data.completed) {
+        alert("❌ This session has already been completed.");
+        navigate(-1);
+      } else if (now < startTime) {
+        alert("⏳ You can only video call at the scheduled time.");
+        navigate(-1);
+      }
+    };
+
     const init = async () => {
-      socketRef.current = io("http://localhost:5000");
+      try {
+        socketRef.current = io("http://localhost:5000");
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream.getAudioTracks()[0].enabled = false;
+        stream.getVideoTracks()[0].enabled = false;
 
-      stream.getAudioTracks()[0].enabled = false;
-      stream.getVideoTracks()[0].enabled = false;
+        localStreamRef.current = stream;
+        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
-      localStreamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+        socketRef.current.emit("join-room", id);
 
-      socketRef.current.emit("join-room", id);
-
-      socketRef.current.on("other-user", (userId) => callUser(userId));
-      socketRef.current.on("user-joined", (userId) => console.log("User joined:", userId));
-      socketRef.current.on("offer", handleReceiveOffer);
-      socketRef.current.on("answer", handleAnswer);
-      socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
+        socketRef.current.on("other-user", callUser);
+        socketRef.current.on("offer", handleReceiveOffer);
+        socketRef.current.on("answer", handleAnswer);
+        socketRef.current.on("ice-candidate", handleNewICECandidate);
+      } catch (err) {
+        console.error("Init error:", err);
+      }
     };
 
     const callUser = (userId) => {
       peerRef.current = createPeer(userId);
-      localStreamRef.current.getTracks().forEach(track =>
+      localStreamRef.current.getTracks().forEach((track) =>
         peerRef.current.addTrack(track, localStreamRef.current)
       );
     };
 
     const createPeer = (userId) => {
-      const peer = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      });
+      const peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
 
       peer.onicecandidate = (e) => {
         if (e.candidate) {
-          socketRef.current.emit("ice-candidate", {
-            target: userId,
-            candidate: e.candidate,
-          });
+          socketRef.current.emit("ice-candidate", { target: userId, candidate: e.candidate });
         }
       };
 
@@ -65,28 +81,20 @@ export default function VideoCallPage() {
       };
 
       peer.createOffer()
-        .then(offer => peer.setLocalDescription(offer))
+        .then((offer) => peer.setLocalDescription(offer))
         .then(() => {
-          socketRef.current.emit("offer", {
-            target: userId,
-            sdp: peer.localDescription,
-          });
+          socketRef.current.emit("offer", { target: userId, sdp: peer.localDescription });
         });
 
       return peer;
     };
 
     const handleReceiveOffer = async ({ sdp, caller }) => {
-      peerRef.current = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      });
+      peerRef.current = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
 
       peerRef.current.onicecandidate = (e) => {
         if (e.candidate) {
-          socketRef.current.emit("ice-candidate", {
-            target: caller,
-            candidate: e.candidate,
-          });
+          socketRef.current.emit("ice-candidate", { target: caller, candidate: e.candidate });
         }
       };
 
@@ -95,116 +103,90 @@ export default function VideoCallPage() {
         setConnected(true);
       };
 
-      localStreamRef.current.getTracks().forEach(track =>
-        peerRef.current.addTrack(track, localStreamRef.current)
-      );
-
+      localStreamRef.current.getTracks().forEach(track => peerRef.current.addTrack(track, localStreamRef.current));
       await peerRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
       const answer = await peerRef.current.createAnswer();
       await peerRef.current.setLocalDescription(answer);
 
-      socketRef.current.emit("answer", {
-        target: caller,
-        sdp: peerRef.current.localDescription,
-      });
+      socketRef.current.emit("answer", { target: caller, sdp: peerRef.current.localDescription });
     };
 
-    const handleAnswer = (message) => {
-      const desc = new RTCSessionDescription(message.sdp);
-      peerRef.current.setRemoteDescription(desc);
+    const handleAnswer = (msg) => {
+      peerRef.current.setRemoteDescription(new RTCSessionDescription(msg.sdp));
     };
 
-    const handleNewICECandidateMsg = (message) => {
-      const candidate = new RTCIceCandidate(message.candidate);
-      peerRef.current.addIceCandidate(candidate);
+    const handleNewICECandidate = (msg) => {
+      peerRef.current.addIceCandidate(new RTCIceCandidate(msg.candidate));
     };
 
+    checkAccess();  // ✅ Protect from early/late access
     init();
 
     return () => {
       socketRef.current?.disconnect();
-      localStreamRef.current?.getTracks().forEach(track => track.stop());
+      localStreamRef.current?.getTracks().forEach(t => t.stop());
+      peerRef.current?.close();
     };
   }, [id]);
 
   const toggleMic = () => {
-    const audioTrack = localStreamRef.current?.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setMicOn(audioTrack.enabled);
+    const track = localStreamRef.current?.getAudioTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      setMicOn(track.enabled);
     }
   };
 
   const toggleCamera = () => {
-    const videoTrack = localStreamRef.current?.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setCameraOn(videoTrack.enabled);
+    const track = localStreamRef.current?.getVideoTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      setCameraOn(track.enabled);
     }
   };
 
-  const hangUp = () => {
-    peerRef.current?.close();
-    socketRef.current?.disconnect();
-    localStreamRef.current?.getTracks().forEach(track => track.stop());
+  const endCall = async () => {
+    try {
+      peerRef.current?.close();
+      socketRef.current?.disconnect();
+      localStreamRef.current?.getTracks().forEach((track) => track.stop());
+
+      const token = localStorage.getItem("token");
+      await fetch(`/api/bookings/mark-completed/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("✅ Appointment marked as completed");
+    } catch (err) {
+      console.error("❌ Failed to mark completed:", err);
+    }
+
     navigate(-1);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-purple-100 to-purple-200 flex flex-col items-center justify-center px-4 py-8">
-      <h2 className="text-3xl font-bold text-purple-700 mb-6">🧠 Therapy Session</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 w-full max-w-5xl">
-        {/* Local Video */}
-        <div className="flex flex-col items-center p-4 bg-white rounded-xl border-2 border-purple-300 shadow-lg">
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            playsInline
-            className="rounded-lg border border-purple-200 shadow-md w-full"
-          />
-          <span className="mt-2 text-sm font-semibold text-gray-700">You</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-purple-50 p-6">
+      <h1 className="text-3xl font-bold text-purple-700 mb-4">🧠 Therapy Session</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+        <div className="border rounded-lg overflow-hidden">
+          <video ref={localVideoRef} autoPlay muted className="w-full h-full bg-black" />
+          <p className="text-center mt-1">You</p>
         </div>
-
-        {/* Remote Video */}
-        <div className="flex flex-col items-center p-4 bg-white rounded-xl border-2 border-purple-300 shadow-lg">
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="rounded-lg border border-purple-200 shadow-md w-full"
-          />
-          <span className="mt-2 text-sm font-semibold text-gray-700">
-            {connected ? "Therapist" : "Waiting..."}
-          </span>
+        <div className="border rounded-lg overflow-hidden">
+          <video ref={remoteVideoRef} autoPlay className="w-full h-full bg-black" />
+          <p className="text-center mt-1">{connected ? "Therapist" : "Waiting..."}</p>
         </div>
       </div>
 
-      {connected && <p className="mt-4 text-green-700 font-medium">✅ You are connected</p>}
-
-      <div className="fixed bottom-6 flex gap-4 bg-white/90 p-4 rounded-full shadow-xl border border-purple-200">
-        <button
-          onClick={toggleMic}
-          className={`p-3 rounded-full ${micOn ? "bg-green-500" : "bg-red-500"} text-white transition hover:scale-110`}
-          title={micOn ? "Mute" : "Unmute"}
-        >
+      <div className="fixed bottom-6 flex gap-4 p-4 bg-white rounded-full shadow-lg">
+        <button onClick={toggleMic} className={`p-3 rounded-full text-white ${micOn ? "bg-green-600" : "bg-red-600"}`}>
           {micOn ? <Mic size={20} /> : <MicOff size={20} />}
         </button>
-
-        <button
-          onClick={toggleCamera}
-          className={`p-3 rounded-full ${cameraOn ? "bg-green-500" : "bg-red-500"} text-white transition hover:scale-110`}
-          title={cameraOn ? "Stop Video" : "Start Video"}
-        >
+        <button onClick={toggleCamera} className={`p-3 rounded-full text-white ${cameraOn ? "bg-green-600" : "bg-red-600"}`}>
           {cameraOn ? <Video size={20} /> : <VideoOff size={20} />}
         </button>
-
-        <button
-          onClick={hangUp}
-          className="p-3 bg-black text-white rounded-full hover:bg-gray-800 transition hover:scale-110"
-          title="End Call"
-        >
+        <button onClick={endCall} className="p-3 bg-black text-white rounded-full">
           <PhoneOff size={20} />
         </button>
       </div>

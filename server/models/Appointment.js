@@ -4,34 +4,42 @@ const appointmentSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
   therapist: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
   slot: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'TherapistSlot',
-    required: true
+    required: true,
   },
   note: {
     type: String,
-    default: ''
+    default: '',
   },
   chatEnabled: {
     type: Boolean,
-    default: true  // You can toggle this later if needed
+    default: true,
   },
   videoEnabled: {
     type: Boolean,
-    default: true  // You can restrict this to after a session starts, etc.
+    default: true,
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+  reviewed: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 export default mongoose.model('Appointment', appointmentSchema);

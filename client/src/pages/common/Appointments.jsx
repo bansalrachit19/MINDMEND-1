@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import ReviewModal from "../../components/common/ReviewModal.jsx"; // ✅ Make sure this file exists
+import ReviewModal from "../../components/common/ReviewModal.jsx";
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
 
   const fetchAppointments = async () => {
     try {
@@ -36,9 +40,16 @@ export default function Appointments() {
     }
   };
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  // 🧠 Utility to check if session is currently active
+  const isSessionActive = (dateStr, timeStr) => {
+    const start = new Date(`${dateStr}T${timeStr}`);
+    const now = new Date();
+    return now >= new Date(start.getTime() - 5 * 60 * 1000) && now <= new Date(start.getTime() + 45 * 60 * 1000);
+  };
+
+  const isPast = (dateStr, timeStr) => {
+    return new Date() > new Date(`${dateStr}T${timeStr}`);
+  };
 
   return (
     <div className="p-6">
@@ -47,84 +58,88 @@ export default function Appointments() {
       </h2>
 
       <div className="space-y-4">
-        {appointments.map((a) => (
-          <div
-            key={a._id}
-            className="bg-white border border-purple-200 p-4 rounded-xl shadow"
-          >
-            <div className="space-y-1 mb-4">
-              <p><strong>Date:</strong> {a.slot.date} at {a.slot.time}</p>
-              {user.role === "user" ? (
-                <p><strong>Therapist:</strong> {a.therapist.name}</p>
-              ) : (
-                <p><strong>Client:</strong> {a.user.name}</p>
-              )}
-              {a.note && <p><strong>Note:</strong> {a.note}</p>}
-            </div>
+        {appointments.map((appt) => {
+          const { date, time } = appt.slot;
+          const sessionActive = isSessionActive(date, time);
+          const sessionPassed = isPast(date, time);
 
-            <div className="flex flex-wrap gap-3 items-center justify-between">
-              {/* Cancel Button */}
-              <button
-                onClick={() => cancelAppointment(a._id)}
-                className="text-sm text-red-600 hover:underline"
-              >
-                Cancel Appointment
-              </button>
+          return (
+            <div key={appt._id} className="bg-white border border-purple-200 p-4 rounded-xl shadow">
+              <div className="space-y-1 mb-4">
+                <p><strong>Date:</strong> {date} at {time}</p>
+                <p>
+                  <strong>{user.role === "user" ? "Therapist" : "Client"}:</strong>{" "}
+                  {user.role === "user" ? appt.therapist.name : appt.user.name}
+                </p>
+                {appt.note && <p><strong>Note:</strong> {appt.note}</p>}
+              </div>
 
-              {/* Message Button */}
-              {user.role === "user" ? (
-                <button
-                  onClick={() => navigate(`/chat?therapist=${a.therapist._id}`)}
-                  className="text-sm bg-emerald-600 text-white px-3 py-1 rounded-lg hover:bg-emerald-700"
-                >
-                  💬 Message Your Therapist
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate(`/chat?therapist=${a.user._id}`)}
-                  className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700"
-                >
-                  💬 Message Client
-                </button>
-              )}
+              <div className="flex flex-wrap gap-3 items-center justify-between">
+                {/* Cancel Button */}
+                {!appt.completed && (
+                  <button
+                    onClick={() => cancelAppointment(appt._id)}
+                    className="text-sm text-red-600 hover:underline"
+                  >
+                    Cancel Appointment
+                  </button>
+                )}
 
-              {/* Video Call Button */}
-              <button
-                onClick={() => navigate(`/video-call/${a._id}`)}
-                className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700"
-              >
-                🎥 {user.role === "user" ? "Start Video Call" : "Join Video Call"}
-              </button>
-
-              {/* ⭐ Review Button */}
-              {user.role === "user" && (
+                {/* Message Button */}
                 <button
                   onClick={() =>
-                    setSelectedAppointment({
-                      id: a._id,
-                      therapistId: a.therapist._id,
-                    })
+                    navigate(`/chat?therapist=${user.role === "user" ? appt.therapist._id : appt.user._id}`)
                   }
-                  className="text-sm bg-yellow-600 text-white px-3 py-1 rounded-lg hover:bg-yellow-700"
+                  className="text-sm bg-emerald-600 text-white px-3 py-1 rounded-lg hover:bg-emerald-700"
                 >
-                  ⭐ Leave a Review
+                  💬 Message {user.role === "user" ? "Your Therapist" : "Client"}
                 </button>
-              )}
+
+                {/* 🎥 Video Call Button */}
+                {appt.completed ? (
+                  <span className="text-sm text-green-600">✅ Session Completed</span>
+                ) : sessionActive ? (
+                  <button
+                    onClick={() => navigate(`/video-call/${appt._id}`)}
+                    className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700"
+                  >
+                    🎥 {user.role === "user" ? "Start Video Call" : "Join Video Call"}
+                  </button>
+                ) : sessionPassed ? (
+                  <span className="text-sm text-gray-500">⏰ Time Passed</span>
+                ) : (
+                  <span className="text-sm text-gray-500">🕒 Not yet time</span>
+                )}
+
+                {/* ⭐ Review Button */}
+                {user.role === "user" && appt.completed && !appt.reviewed && (
+                  <button
+                    onClick={() =>
+                      setSelectedAppointment({
+                        id: appt._id,
+                        therapistId: appt.therapist._id,
+                      })
+                    }
+                    className="text-sm bg-yellow-600 text-white px-3 py-1 rounded-lg hover:bg-yellow-700"
+                  >
+                    ⭐ Leave a Review
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Review Modal */}
       {selectedAppointment && (
-       <ReviewModal
-  isOpen={!!selectedAppointment}
-  appointmentId={selectedAppointment.id}
-  therapistId={selectedAppointment.therapistId}
-  onClose={() => setSelectedAppointment(null)}
-  onReviewSubmit={fetchAppointments}
-/>
-
+        <ReviewModal
+          isOpen={!!selectedAppointment}
+          appointmentId={selectedAppointment.id}
+          therapistId={selectedAppointment.therapistId}
+          onClose={() => setSelectedAppointment(null)}
+          onReviewSubmit={fetchAppointments}
+        />
       )}
     </div>
   );
