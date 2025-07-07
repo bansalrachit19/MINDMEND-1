@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import User from '../models/User.js';
 dotenv.config();
 
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer '))
@@ -12,7 +13,11 @@ export const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (!user) return res.status(401).json({ msg: 'User not found' });
+
+    req.user = user;
     next();
   } catch (err) {
     res.status(403).json({ msg: 'Invalid token' });

@@ -22,7 +22,7 @@ const reactionSchema = new mongoose.Schema({
 
 // Main post schema
 const postSchema = new mongoose.Schema({
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   content: { type: String, required: true },
   topic: { type: String, required: true },
   anonymous: { type: Boolean, default: false },

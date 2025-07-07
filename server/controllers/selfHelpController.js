@@ -103,7 +103,7 @@ export const getResourcesForUserMood = async (req, res) => {
 
     res.json(resources);
   } catch (err) {
-    console.error('❌ Failed to fetch user-matched resources:', err);
+    console.error('Failed to fetch user-matched resources:', err);
     res.status(500).json({ msg: 'Error fetching resources' });
   }
 };

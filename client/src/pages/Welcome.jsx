@@ -42,7 +42,7 @@ export default function Welcome() {
             className="text-xl text-gray-700 max-w-2xl"
           >
             Your journey to a healthier mind starts here. Track your mood,
-            connect with therapists, explore personalized self-help tools — all
+            connect with therapists, explore personalized self-help tools - all
             in one safe space.
           </motion.p>
 
