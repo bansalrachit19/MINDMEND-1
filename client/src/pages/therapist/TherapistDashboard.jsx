@@ -73,11 +73,6 @@ export default function TherapistDashboard() {
             <p className="text-gray-600 mt-2">See who's booked sessions and when.</p>
           </Link>
 
-          <div className="bg-white border-l-4 border-purple-300 shadow p-6 rounded-xl opacity-60 cursor-not-allowed">
-            <h3 className="text-xl font-semibold text-purple-700">🧠 AI Mood Insights (Coming Soon)</h3>
-            <p className="text-gray-600 mt-2">Help users better through mood history.</p>
-          </div>
-
           <Link to="/therapist/calendar" className="bg-white border-l-4 border-purple-500 shadow p-6 rounded-xl hover:shadow-lg transition">
             <h3 className="text-xl font-semibold text-purple-700">🗓 Calendar View</h3>
             <p className="text-gray-600 mt-2">Track your slots and bookings visually.</p>
