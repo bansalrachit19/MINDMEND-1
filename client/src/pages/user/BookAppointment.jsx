@@ -49,6 +49,10 @@ export default function BookAppointment() {
                 Specializations: {slot.therapist.specialization.join(', ')}
               </p>
             )}
+            {slot.therapist?.avgRating && (
+  <p className="text-yellow-500 text-sm font-semibold">⭐ {slot.therapist.avgRating} / 5</p>
+)}
+
             <p className="text-gray-500">{slot.date} at {slot.time}</p>
             <p className="text-sm text-gray-600 italic">Duration: {slot.duration} mins</p>
 

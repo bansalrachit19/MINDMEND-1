@@ -30,16 +30,52 @@ export const createSlot = async (req, res) => {
   }
 };
 
-// ✅ Get Available Slots (Only truly unbooked slots)
+// ✅ Get Available Slots (only truly unbooked)
 export const getSlots = async (req, res) => {
   try {
-    const availableSlots = await TherapistSlot.find({ isBooked: false }).populate('therapist', 'name specialization');
-    res.json(availableSlots);
+    const availableSlots = await TherapistSlot.find({ isBooked: false })
+      .populate('therapist', 'name specialization') // just name & specialization
+
+    // Get all therapist IDs from slots
+    const therapistIds = [...new Set(availableSlots.map(slot => slot.therapist?._id.toString()))];
+
+    // Fetch all reviews for these therapists
+    const reviews = await Review.find({ therapist: { $in: therapistIds } });
+
+    // Group ratings per therapist
+    const ratingMap = {};
+    reviews.forEach(r => {
+      const tId = r.therapist.toString();
+      if (!ratingMap[tId]) ratingMap[tId] = [];
+      ratingMap[tId].push(r.rating);
+    });
+
+    // Compute avg rating per therapist
+    const avgRatingMap = {};
+    Object.entries(ratingMap).forEach(([tId, ratings]) => {
+      const sum = ratings.reduce((a, b) => a + b, 0);
+      avgRatingMap[tId] = (sum / ratings.length).toFixed(1);
+    });
+
+    // Attach avgRating to each slot's therapist
+    const enrichedSlots = availableSlots.map(slot => {
+      const therapistId = slot.therapist?._id?.toString();
+      return {
+        ...slot.toObject(),
+        therapist: {
+          ...slot.therapist?.toObject(),
+          avgRating: avgRatingMap[therapistId] || null
+        }
+      };
+    });
+
+    res.json(enrichedSlots);
   } catch (err) {
-    console.error('❌ Failed to fetch slots:', err);
+    console.error('❌ Failed to fetch slots with ratings:', err);
     res.status(500).json({ msg: 'Failed to fetch slots' });
   }
 };
+
 
 // ✅ Book Appointment (User Only)
 export const bookAppointment = async (req, res) => {
@@ -104,7 +140,7 @@ export const getMyAppointments = async (req, res) => {
   }
 };
 
-// ✅ Cancel Appointment (does NOT mark slot as available again)
+// ✅ Cancel Appointment (slot stays marked as booked)
 export const cancelAppointment = async (req, res) => {
   const { id } = req.params;
 
@@ -116,7 +152,7 @@ export const cancelAppointment = async (req, res) => {
     const isTherapist = appt.therapist?.toString() === req.user.id;
     if (!isUser && !isTherapist) return res.status(403).json({ msg: 'Not authorized to cancel this appointment' });
 
-    // DO NOT mark the slot as unbooked again
+    // DO NOT make slot available again
     await Appointment.deleteOne({ _id: id });
 
     res.json({ msg: 'Appointment cancelled' });
@@ -126,22 +162,20 @@ export const cancelAppointment = async (req, res) => {
   }
 };
 
-// ✅ Therapist Stats (totalSlots excludes completed appointments)
+// ✅ Therapist Stats (including average rating)
 export const getTherapistStats = async (req, res) => {
   try {
     const therapistId = req.user.id;
 
-    // Count only future or ongoing slots (exclude slots linked to completed appointments)
+    // Fetch completed appointments to exclude from totalSlots
     const completedAppointments = await Appointment.find({
       therapist: therapistId,
       completed: true,
     }).select('slot');
 
     const completedSlotIds = new Set(completedAppointments.map(a => a.slot.toString()));
-
     const allSlots = await TherapistSlot.find({ therapist: therapistId });
     const totalSlots = allSlots.filter(slot => !completedSlotIds.has(slot._id.toString())).length;
-
     const bookedSlots = await Appointment.countDocuments({ therapist: therapistId });
     const availableSlots = allSlots.filter(slot => !slot.isBooked).length;
 
@@ -150,11 +184,22 @@ export const getTherapistStats = async (req, res) => {
       { $group: { _id: '$user' } }
     ]);
 
+    // ⬇️ Get Reviews for this therapist’s sessions
+    const reviews = await Review.find({ therapist: therapistId });
+
+    let avgRating = 0;
+    if (reviews.length > 0) {
+      const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+      avgRating = (sum / reviews.length).toFixed(1);
+    }
+
     res.json({
       totalSlots,
       bookedSlots,
       availableSlots,
-      uniqueUsers: uniqueUsers.length
+      uniqueUsers: uniqueUsers.length,
+      avgRating,
+      totalReviews: reviews.length
     });
   } catch (err) {
     console.error('❌ Failed to load stats:', err);
