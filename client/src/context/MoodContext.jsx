@@ -8,10 +8,16 @@ export const MoodProvider = ({ children }) => {
   const [moodCategory, setMoodCategory] = useState(() => {
     return localStorage.getItem('moodCategory') || null;
   });
+  const [lastMoodCheck, setLastMoodCheck] = useState(() => {
+    const stored = localStorage.getItem('lastMoodCheck');
+    return stored ? parseInt(stored) : null;
+  });
+
 
   // ✅ This function updates both state and localStorage
   const updateMoodSummary = (category, timestamp) => {
     setMoodCategory(category);
+    setLastMoodCheck(timestamp);
     localStorage.setItem('moodCategory', category);
     localStorage.setItem('lastMoodCheck', timestamp.toString());
   };
@@ -23,6 +29,7 @@ export const MoodProvider = ({ children }) => {
         setShowMoodModal,
         moodCategory,
         setMoodCategory,
+        lastMoodCheck,
         updateMoodSummary,
       }}
     >

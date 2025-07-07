@@ -7,7 +7,7 @@ const moodTips = {
   Unknown: "Take a moment to check your mood 🧠",
 };
 
-export default function MoodSummaryWidget() {
+export default function MoodSummaryWidget({lastChecked}) {
   const { setShowMoodModal, moodCategory, lastMoodCheck } = useMood();
 
   const mood = moodCategory || "Unknown";
