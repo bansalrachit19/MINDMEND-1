@@ -9,8 +9,10 @@ import TherapistRecommendations from '../../components/user/TherapistRecommendat
 import MoodSummaryWidget from '../../components/mood/MoodSummaryWidget';
 import SelfHelpResources from '../../components/selfHelp/SelfHelpResources';
 import { Book, PlayCircle, Heart, Brain, Dumbbell } from 'lucide-react';
+import { useMood } from '../../context/MoodContext';
 
 export default function UserDashboard() {
+  const {moodCategory} = useMood();
   const [category, setCategory] = useState(null);
   const [lastChecked, setLastChecked] = useState(null);
   const [showModal, setShowModal] = useState(() => {
@@ -71,7 +73,8 @@ export default function UserDashboard() {
 
       try {
         const res = await axios.get('/api/selfhelp/user-matches', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          params: {mood: moodCategory}
         });
         setPersonalized(res.data);
       } catch (err) {
@@ -80,7 +83,7 @@ export default function UserDashboard() {
     };
 
     fetchPersonalized();
-  }, []);
+  }, [moodCategory]);
 
   return (
     <div className="p-6">
@@ -105,9 +108,9 @@ export default function UserDashboard() {
 
       {showModal && <MoodAssessmentModal onComplete={handleAssessmentComplete} />}
 
-      {category === 'happy' && <HappyRecommendations />}
-      {category === 'self' && <SelfHealTools />}
-      {category === 'need' && <TherapistRecommendations />}
+      {moodCategory === 'happy' && <HappyRecommendations />}
+      {moodCategory === 'self' && <SelfHealTools />}
+      {moodCategory === 'need' && <TherapistRecommendations />}
 
       {personalized.length === 0 && (
         <div className="mt-10 text-gray-600 italic">
@@ -148,7 +151,7 @@ export default function UserDashboard() {
 
       <div className="grid md:grid-cols-2 gap-6 pt-10">
         <Link to="/user/book" className="bg-white border-l-4 border-purple-500 shadow p-6 rounded-xl hover:shadow-lg transition">
-          <h3 className="text-xl font-semibold text-purple-700">🗕️ Book Therapy</h3>
+          <h3 className="text-xl font-semibold text-purple-700">📅 Book Therapy</h3>
           <p className="text-gray-600 mt-2">Browse therapist slots and book a session.</p>
         </Link>
 

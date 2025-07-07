@@ -16,6 +16,7 @@ export const createSlot = async (req, res) => {
 
     const slot = await TherapistSlot.create({
       therapist: req.user.id,
+      therapistName: therapist.name,
       date,
       time,
       duration: duration || 30,
@@ -31,7 +32,7 @@ export const createSlot = async (req, res) => {
 // ✅ Get Available Slots (includes ones booked by current user)
 export const getSlots = async (req, res) => {
   try {
-    const allSlots = await TherapistSlot.find().populate('therapist', 'name');
+    const allSlots = await TherapistSlot.find().populate('therapist', 'name specialization');
 
     const myAppointments = await Appointment.find({ user: req.user.id }).select('slot');
     const myBookedSlotIds = new Set(myAppointments.map(appt => appt.slot.toString()));

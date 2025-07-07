@@ -12,6 +12,7 @@ export default function BookAppointment() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSlots(res.data);
+      console.log(slots);
     } catch (err) {
       console.error('❌ Failed to fetch slots', err);
     }
@@ -42,7 +43,12 @@ export default function BookAppointment() {
       <div className="grid md:grid-cols-2 gap-6">
         {slots.map(slot => (
           <div key={slot._id} className="bg-white shadow rounded-xl p-4 border border-purple-100">
-            <p className="font-medium text-purple-600">{slot.therapist.name}</p>
+            <p className="font-medium text-purple-600">{slot.therapist?.name || slot.therapistName || 'Unknown Therapist'}</p>
+            {slot.therapist?.specialization?.length > 0 && (
+              <p className="text-sm text-gray-500">
+                Specializations: {slot.therapist.specialization.join(', ')}
+              </p>
+            )}
             <p className="text-gray-500">{slot.date} at {slot.time}</p>
             <p className="text-sm text-gray-600 italic">Duration: {slot.duration} mins</p>
 
