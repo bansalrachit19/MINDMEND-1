@@ -32,7 +32,7 @@ export default function TherapistDashboard() {
                 transition={{ duration: 0.5 }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
             >
-                <StatCard label="Total Slots" value={stats.totalSlots} />
+                <StatCard label="Total Sessions" value={stats.totalSlots} />
                 <StatCard label="Booked Sessions" value={stats.bookedSlots} />
                 <StatCard label="Available Slots" value={stats.availableSlots} />
                 <StatCard label="Unique Clients" value={stats.uniqueUsers} />

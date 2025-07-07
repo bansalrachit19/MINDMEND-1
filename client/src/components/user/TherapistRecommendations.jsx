@@ -5,13 +5,25 @@ import { motion } from 'framer-motion';
 export default function TherapistRecommendations() {
   const [therapists, setTherapists] = useState([]);
 
+  "Addiction",
+  "Behavioral",
+  "Child",
+  "Clinical",
+  "Cognitive",
+  "Eating Disorder",
+  "Exercise",
+  "Trauma",
+  "Anxiety",
+  "Grief",
+  "Sleep",
+
   useEffect(() => {
     const fetch = async () => {
       const token = localStorage.getItem('token');
       try {
         const res = await axios.post(
           '/api/users/match-therapists',
-          { keywords: ['Anxiety', 'Grief', 'Trauma'] }, // TODO: Replace with real dynamic keywords
+          { keywords: ['Addiction', 'Behavioral', 'Child', 'Clinical', 'Cognitive', 'Eating Disorder', 'Exercise', 'Trauma', 'Anxiety', 'Grief', 'Sleep'] }, // TODO: Replace with real dynamic keywords
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTherapists(res.data);

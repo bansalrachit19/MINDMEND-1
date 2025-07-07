@@ -52,7 +52,9 @@ export default function Appointments() {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold text-purple-700 mb-4">
-        {user.role === "user" ? "My Therapy Sessions" : "Your Scheduled Appointments"}
+        {user.role === "user"
+          ? "My Therapy Sessions"
+          : "Your Scheduled Appointments"}
       </h2>
 
       <div className="space-y-4">
@@ -62,14 +64,25 @@ export default function Appointments() {
           const sessionPassed = isPast(date, time);
 
           return (
-            <div key={appt._id} className="bg-white border border-purple-200 p-4 rounded-xl shadow">
+            <div
+              key={appt._id}
+              className="bg-white border border-purple-200 p-4 rounded-xl shadow"
+            >
               <div className="space-y-1 mb-4">
-                <p><strong>Date:</strong> {date} at {time}</p>
                 <p>
-                  <strong>{user.role === "user" ? "Therapist" : "Client"}:</strong>{" "}
+                  <strong>Date:</strong> {date} at {time}
+                </p>
+                <p>
+                  <strong>
+                    {user.role === "user" ? "Therapist" : "Client"}:
+                  </strong>{" "}
                   {user.role === "user" ? appt.therapist.name : appt.user.name}
                 </p>
-                {appt.note && <p><strong>Note:</strong> {appt.note}</p>}
+                {appt.note && (
+                  <p>
+                    <strong>Note:</strong> {appt.note}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-3 items-center justify-between">
@@ -86,22 +99,34 @@ export default function Appointments() {
                 {/* 💬 Message */}
                 <button
                   onClick={() =>
-                    navigate(`/chat?therapist=${user.role === "user" ? appt.therapist._id : appt.user._id}`)
+                    navigate(
+                      `/chat?therapist=${
+                        user.role === "user"
+                          ? appt.therapist._id
+                          : appt.user._id
+                      }`
+                    )
                   }
                   className="text-sm bg-emerald-600 text-white px-3 py-1 rounded-lg hover:bg-emerald-700"
                 >
-                  💬 Message {user.role === "user" ? "Your Therapist" : "Client"}
+                  💬 Message{" "}
+                  {user.role === "user" ? "Your Therapist" : "Client"}
                 </button>
 
                 {/* 🎥 Video Call */}
                 {appt.completed ? (
-                  <span className="text-sm text-green-600">✅ Session Completed</span>
+                  <span className="text-sm text-green-600">
+                    ✅ Session Completed
+                  </span>
                 ) : sessionActive ? (
                   <button
                     onClick={() => navigate(`/video-call/${appt._id}`)}
                     className="text-sm bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700"
                   >
-                    🎥 {user.role === "user" ? "Start Video Call" : "Join Video Call"}
+                    🎥{" "}
+                    {user.role === "user"
+                      ? "Start Video Call"
+                      : "Join Video Call"}
                   </button>
                 ) : sessionPassed ? (
                   <span className="text-sm text-gray-500">⏰ Time Passed</span>

@@ -3,10 +3,11 @@ import MoodEntry from '../models/MoodEntry.js';
 
 export const createResource = async (req, res) => {
   try {
-    const { title, type, link, description } = req.body;
+    const { title, type, link, description, suggestedFor } = req.body;
     const newResource = new SelfHelp({
       title,
       type,
+      suggestedFor: [suggestedFor],
       link,
       description,
       approved: true,
@@ -90,16 +91,18 @@ export const approveSelfHelpResource = async (req, res) => {
 
 export const getResourcesForUserMood = async (req, res) => {
   try {
-    const latestMood = await MoodEntry.findOne({ user: req.user._id }).sort({ date: -1 });
+    const latestMood = req.query.mood;
     console.log(latestMood);
-    if (!latestMood || !latestMood.mood) {
+    if (!latestMood) {
       return res.json([]); // fallback for users with no mood data
     }
 
     const resources = await SelfHelp.find({
       approved: true,
-      suggestedFor: latestMood.mood
+      suggestedFor: latestMood
     });
+
+    console.log("suggested resources", resources);
 
     res.json(resources);
   } catch (err) {

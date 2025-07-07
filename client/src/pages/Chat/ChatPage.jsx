@@ -1,29 +1,32 @@
-import { useEffect, useState, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { io } from 'socket.io-client';
+import { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { io } from "socket.io-client";
+import { FiArrowLeft } from "react-icons/fi";
 
-const socket = io('http://localhost:5000', { withCredentials: true });
+const socket = io("http://localhost:5000", { withCredentials: true });
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([]);
-  const [content, setContent] = useState('');
-  const [receiverName, setReceiverName] = useState('');
+  const [content, setContent] = useState("");
+  const [receiverName, setReceiverName] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
 
   const searchParams = new URLSearchParams(useLocation().search);
-  const receiverId = searchParams.get('therapist');
+  const receiverId = searchParams.get("therapist");
 
   const fetchMessages = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await axios.get(`/api/messages?partnerId=${receiverId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setMessages(res.data);
     } catch (err) {
-      console.error('Error loading messages', err);
+      console.error("Error loading messages", err);
     } finally {
       setLoading(false);
     }
@@ -31,13 +34,13 @@ export default function ChatPage() {
 
   const fetchReceiverDetails = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await axios.get(`/api/users/${receiverId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setReceiverName(res.data.name);
     } catch (err) {
-      console.error('Error fetching user', err);
+      console.error("Error fetching user", err);
     }
   };
 
@@ -45,16 +48,22 @@ export default function ChatPage() {
     if (!content.trim()) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
+      const currentUserId = jwtDecode(token).id;
+      setMessages((prev) => [...prev, { content, sender: currentUserId }]);
       await axios.post(
-        '/api/messages',
+        "/api/messages",
         { receiverId, content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      socket.emit('send-message', { roomId: receiverId, message: content });
-      setContent('');
+      socket.emit("send-message", {
+        roomId: receiverId,
+        message: content,
+        senderId: currentUserId,
+      });
+      setContent("");
     } catch (err) {
-      console.error('Failed to send message', err);
+      console.error("Failed to send message", err);
     }
   };
 
@@ -62,26 +71,34 @@ export default function ChatPage() {
     fetchMessages();
     fetchReceiverDetails();
 
-    socket.emit('join-room', { roomId: receiverId });
+    socket.emit("join-room", { roomId: receiverId });
 
-    socket.on('receive-message', (message) => {
-      setMessages((prev) => [...prev, { content: message, sender: receiverId }]);
+    socket.on("receive-message", ({ message, senderId }) => {
+      setMessages((prev) => [...prev, { content: message, sender: senderId }]);
     });
 
     return () => {
-      socket.off('receive-message');
+      socket.off("receive-message");
       socket.disconnect();
     };
   }, [receiverId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 to-emerald-100 p-6">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 flex items-center gap-2 text-purple-700 hover:text-purple-900 transition"
+      >
+        <FiArrowLeft className="text-xl" />
+        <span>Back</span>
+      </button>
+
       <h2 className="text-2xl font-bold text-center text-purple-700 mb-4">
-        Chat with {receiverName || 'Therapist'}
+        Chat with {receiverName || "Therapist"}
       </h2>
 
       <div className="flex-1 bg-white rounded-xl shadow-md p-4 overflow-y-auto mb-4 max-h-[60vh]">
@@ -94,14 +111,14 @@ export default function ChatPage() {
             <div
               key={index}
               className={`mb-3 flex ${
-                msg.sender === receiverId ? 'justify-start' : 'justify-end'
+                msg.sender === receiverId ? "justify-start" : "justify-end"
               }`}
             >
               <div
                 className={`p-2 rounded-lg max-w-xs ${
                   msg.sender === receiverId
-                    ? 'bg-gray-200 text-black'
-                    : 'bg-purple-600 text-white'
+                    ? "bg-gray-200 text-black"
+                    : "bg-purple-600 text-white"
                 }`}
               >
                 {msg.content}
