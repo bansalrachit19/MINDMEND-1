@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Book, PlayCircle, Heart, Brain, Dumbbell } from 'lucide-react';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 const icons = {
   video: <PlayCircle className="text-purple-500 w-6 h-6" />,
@@ -15,7 +16,7 @@ export default function SelfHelpResources() {
   const [resources, setResources] = useState([]);
 
   useEffect(() => {
-    axios.get('/api/selfhelp/all')
+    axios.get(`${base}/api/selfhelp/all`)
       .then(res => setResources(res.data.filter(r => r.approved)))
       .catch(err => console.error("Failed to load resources", err));
   }, []);

@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import PublicNavbar from "../components/PublicNavbar.jsx";
 import { motion } from "framer-motion";
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function Login() {
   const { setUser } = useAuth();
@@ -13,7 +14,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/api/auth/login", form);
+      const res = await axios.post(`${base}/api/auth/login`, form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setUser(res.data.user);
@@ -24,7 +25,7 @@ export default function Login() {
   };
 
   const googleLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = `${base}/api/auth/google`;
   };
 
   return (

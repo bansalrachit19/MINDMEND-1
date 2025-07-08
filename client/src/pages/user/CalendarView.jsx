@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
 import axios from 'axios';
 import 'react-calendar/dist/Calendar.css';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function CalendarView() {
   const [slots, setSlots] = useState([]);
@@ -9,7 +10,7 @@ export default function CalendarView() {
 
   const fetchSlots = async () => {
     const token = localStorage.getItem('token');
-    const res = await axios.get('/api/bookings/slots', {
+    const res = await axios.get(`${base}/api/bookings/slots`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     setSlots(res.data);

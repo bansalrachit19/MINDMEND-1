@@ -10,6 +10,7 @@ import MoodSummaryWidget from '../../components/mood/MoodSummaryWidget';
 import SelfHelpResources from '../../components/selfHelp/SelfHelpResources';
 import { Book, PlayCircle, Heart, Brain, Dumbbell } from 'lucide-react';
 import { useMood } from '../../context/MoodContext';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function UserDashboard() {
   const {moodCategory} = useMood();
@@ -72,7 +73,7 @@ export default function UserDashboard() {
       if (!token) return;
 
       try {
-        const res = await axios.get('/api/selfhelp/user-matches', {
+        const res = await axios.get(`${base}/api/selfhelp/user-matches`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {mood: moodCategory}
         });

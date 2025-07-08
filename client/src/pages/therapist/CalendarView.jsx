@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import axios from "axios";
+const base = import.meta.env.VITE_API_BASE_URL;
 import {jwtDecode} from "jwt-decode";
 import "react-calendar/dist/Calendar.css";
 
@@ -25,10 +26,10 @@ export default function TherapistCalendar() {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
       const [slotRes, apptRes] = await Promise.all([
-        axios.get("/api/bookings/slots", {
+        axios.get(`${base}/api/bookings/slots`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("/api/bookings/my-appointments", {
+        axios.get(`${base}/api/bookings/my-appointments`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

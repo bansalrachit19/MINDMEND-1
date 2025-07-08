@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { toast } from "react-toastify";
 import axios from "axios";
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function ReviewModal({ isOpen, onClose, appointmentId, therapistId, onReviewSubmit }) {
   const [rating, setRating] = useState(0);
@@ -16,7 +17,7 @@ export default function ReviewModal({ isOpen, onClose, appointmentId, therapistI
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "/api/reviews",
+        `${base}/api/reviews`,
         { therapistId, appointmentId, rating, comment },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -34,8 +35,8 @@ export default function ReviewModal({ isOpen, onClose, appointmentId, therapistI
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <Dialog.Panel className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg space-y-4">
-        <Dialog.Title className="text-xl font-bold text-purple-700">Leave a Review</Dialog.Title>
+      <DialogPanel className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg space-y-4">
+        <DialogTitle className="text-xl font-bold text-purple-700">Leave a Review</DialogTitle>
 
         <div className="flex space-x-2 justify-center">
           {[1, 2, 3, 4, 5].map((star) => (
@@ -61,7 +62,7 @@ export default function ReviewModal({ isOpen, onClose, appointmentId, therapistI
           <button onClick={onClose} className="text-gray-500 hover:underline">Cancel</button>
           <button onClick={handleSubmit} className="bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700">Submit</button>
         </div>
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ReviewModal from "../../components/common/ReviewModal.jsx";
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
@@ -17,7 +18,7 @@ export default function Appointments() {
   const fetchAppointments = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("/api/bookings/my-appointments", {
+      const res = await axios.get(`${base}/api/bookings/my-appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAppointments(res.data);
@@ -30,7 +31,7 @@ export default function Appointments() {
     if (!confirm("Cancel this appointment?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`/api/bookings/cancel/${id}`, {
+      await axios.delete(`${base}/api/bookings/cancel/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Cancelled");

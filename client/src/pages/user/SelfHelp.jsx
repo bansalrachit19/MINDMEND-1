@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ResourceCard from '../../components/resources/ResourceCard';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function SelfHelp() {
   const [resources, setResources] = useState([]);
@@ -9,7 +10,7 @@ export default function SelfHelp() {
 
   useEffect(() => {
     const fetch = async () => {
-      const res = await axios.get('/api/resources', {
+      const res = await axios.get(`${base}/api/resources`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setResources(res.data);

@@ -4,8 +4,9 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { io } from "socket.io-client";
 import { FiArrowLeft } from "react-icons/fi";
+const base = import.meta.env.VITE_API_BASE_URL;
 
-const socket = io("http://localhost:5000", { withCredentials: true });
+const socket = io(`${base}`, { withCredentials: true });
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([]);
@@ -21,7 +22,7 @@ export default function ChatPage() {
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`/api/messages?partnerId=${receiverId}`, {
+      const res = await axios.get(`${base}/api/messages?partnerId=${receiverId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessages(res.data);
@@ -35,7 +36,7 @@ export default function ChatPage() {
   const fetchReceiverDetails = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`/api/users/${receiverId}`, {
+      const res = await axios.get(`${base}/api/users/${receiverId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReceiverName(res.data.name);
@@ -55,7 +56,7 @@ export default function ChatPage() {
       const newMessage = { content, sender: currentUserId, _id: messageId };
       setMessages((prev) => [...prev, newMessage]);
       await axios.post(
-        "/api/messages",
+        `${base}/api/messages`,
         { receiverId, content },
         { headers: { Authorization: `Bearer ${token}` } }
       );

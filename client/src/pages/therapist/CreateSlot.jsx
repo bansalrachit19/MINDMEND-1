@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function CreateSlot() {
   const [date, setDate] = useState('');
@@ -11,7 +12,7 @@ export default function CreateSlot() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      await axios.post('/api/bookings/slot', { date, time, duration }, {
+      await axios.post(`${base}/api/bookings/slot`, { date, time, duration }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Slot created');

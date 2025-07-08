@@ -4,6 +4,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import StatCard from '../common/StatCard';
 import { FaStar } from 'react-icons/fa';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function TherapistDashboard() {
   const [stats, setStats] = useState(null);
@@ -12,7 +13,7 @@ export default function TherapistDashboard() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('/api/bookings/therapist-stats', {
+        const res = await axios.get(`${base}/api/bookings/therapist-stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(res.data);

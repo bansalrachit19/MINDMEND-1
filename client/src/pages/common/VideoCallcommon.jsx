@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from "lucide-react";
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function VideoCallPage() {
   const { id } = useParams();
@@ -20,7 +21,7 @@ export default function VideoCallPage() {
   useEffect(() => {
     const checkAccess = async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch(`/api/bookings/${id}`, {
+      const res = await fetch(`${base}/api/bookings/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -39,7 +40,7 @@ export default function VideoCallPage() {
 
     const init = async () => {
       try {
-        socketRef.current = io("http://localhost:5000");
+        socketRef.current = io(`${base}`);
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getAudioTracks()[0].enabled = false;
@@ -152,7 +153,7 @@ export default function VideoCallPage() {
       localStreamRef.current?.getTracks().forEach((track) => track.stop());
 
       const token = localStorage.getItem("token");
-      await fetch(`/api/bookings/mark-completed/${id}`, {
+      await fetch(`${base}/api/bookings/mark-completed/${id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });

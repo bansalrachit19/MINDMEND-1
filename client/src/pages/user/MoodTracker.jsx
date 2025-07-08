@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 const moods = [
   { type: 'happy', emoji: '😄' },
@@ -26,7 +27,7 @@ export default function MoodTracker() {
         return;
       }
       const token = localStorage.getItem('token');
-      await axios.post('/api/mood/log', {
+      await axios.post(`${base}/api/mood/log`, {
         mood: selectedMood,
         note
       }, {

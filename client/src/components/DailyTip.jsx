@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { RefreshCw, Smile } from 'lucide-react';
 import { motion } from 'framer-motion';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function DailyTip() {
   const [tip, setTip] = useState('');
@@ -10,7 +11,7 @@ export default function DailyTip() {
   const fetchTip = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/tips/daily-tip');
+      const res = await axios.get(`${base}/api/tips/daily-tip`);
       setTip(res.data.tip);
     } catch (err) {
       setTip("Did you know writing down 3 things you're grateful for improves mental clarity?");

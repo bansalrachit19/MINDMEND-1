@@ -3,6 +3,7 @@ import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 const moodLabels = {
   happy: '😊 Happy',
@@ -28,7 +29,7 @@ export default function MoodHistory() {
   useEffect(() => {
     const fetchHistory = async () => {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/mood/history', {
+      const res = await axios.get(`${base}/api/mood/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const sorted = [...res.data].reverse();

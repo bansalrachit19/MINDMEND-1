@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useMood } from '../../context/MoodContext';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 const questions = [
   { id: 1, q: "How have you been sleeping lately?", weight: { happy: 0, self: 1, need: 2 } },
@@ -41,7 +42,7 @@ export default function MoodAssessmentModal({ onComplete }) {
 
       try {
         await axios.post(
-          '/api/mood/save',
+          `${base}/api/mood/save`,
           {
             answers: newScores,
             score: Math.max(...Object.values(newScores)),

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { toast } from "react-toastify";
 import axios from "axios";
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function ReviewModal({
   isOpen,
@@ -23,7 +24,7 @@ export default function ReviewModal({
       const token = localStorage.getItem("token");
 
       await axios.post(
-        `/api/reviews/${appointmentId}`,
+        `${base}/api/reviews/${appointmentId}`,
         {
           therapistId,
           rating,

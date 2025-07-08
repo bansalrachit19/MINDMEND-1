@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function BookAppointment() {
   const [slots, setSlots] = useState([]);
@@ -8,7 +9,7 @@ export default function BookAppointment() {
   const fetchSlots = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await axios.get('/api/bookings/slots', {
+      const res = await axios.get(`${base}/api/bookings/slots`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSlots(res.data);
@@ -22,7 +23,7 @@ export default function BookAppointment() {
     const token = localStorage.getItem('token');
     const note = notes[slotId] || '';
     try {
-      await axios.post('/api/bookings/book', { slotId, note }, {
+      await axios.post(`${base}/api/bookings/book`, { slotId, note }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('🎉 Appointment booked!');

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 import MoodSummaryWidget from '../components/user/MoodSummaryWidget';
 import HappyRecommendations from '../components/user/HappyRecommendations';
@@ -25,7 +26,7 @@ export default function Dashboard() {
       }
 
       try {
-        const response = await axios.get('/api/auth/me', {
+        const response = await axios.get(`${base}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

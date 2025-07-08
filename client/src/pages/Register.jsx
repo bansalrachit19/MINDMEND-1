@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import PublicNavbar from "../components/PublicNavbar.jsx";
+const base = import.meta.env.VITE_API_BASE_URL;
 
 const SPECIALIZATIONS = [
   "Addiction",
@@ -43,7 +44,7 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/api/auth/register", form);
+      const res = await axios.post(`${base}/api/auth/register`, form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setUser(res.data.user);

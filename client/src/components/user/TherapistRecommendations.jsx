@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+const base = import.meta.env.VITE_API_BASE_URL;
 
 export default function TherapistRecommendations() {
   const [therapists, setTherapists] = useState([]);
@@ -22,7 +23,7 @@ export default function TherapistRecommendations() {
       const token = localStorage.getItem('token');
       try {
         const res = await axios.post(
-          '/api/users/match-therapists',
+          `${base}/api/users/match-therapists`,
           { keywords: ['Addiction', 'Behavioral', 'Child', 'Clinical', 'Cognitive', 'Eating Disorder', 'Exercise', 'Trauma', 'Anxiety', 'Grief', 'Sleep'] }, // TODO: Replace with real dynamic keywords
           { headers: { Authorization: `Bearer ${token}` } }
         );
