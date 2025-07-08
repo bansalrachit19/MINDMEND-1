@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useMood } from './context/MoodContext';
 
@@ -24,12 +25,23 @@ import UserLayout from './layouts/UserLayout.jsx';
 import TherapistLayout from './layouts/TherapistLayout.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import AdminUpload from './pages/admin/AdminUpload.jsx';
+import SplashLoader from './components/ui/SplashLoader.jsx';
 
 import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
 
 export default function App() {
   const { user } = useAuth();
   const { showMoodModal, setShowMoodModal } = useMood();
+  const [appLoading, setAppLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (appLoading) return <SplashLoader />;
 
   return (
     <>

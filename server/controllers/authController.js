@@ -10,6 +10,9 @@ const generateToken = (user) => {
 
 export const register = async (req, res) => {
   const { name, email, password, role, specialization } = req.body;
+  if (req.body.role === "admin") {
+    return res.status(403).json({ msg: "Admin registration is not allowed." });
+  }
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ msg: 'Email already in use' });

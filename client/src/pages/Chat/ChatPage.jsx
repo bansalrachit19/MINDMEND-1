@@ -4,8 +4,8 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { io } from "socket.io-client";
 import { FiArrowLeft } from "react-icons/fi";
-const base = import.meta.env.VITE_API_BASE_URL;
 
+const base = import.meta.env.VITE_API_BASE_URL;
 const socket = io(`${base}`, { withCredentials: true });
 
 export default function ChatPage() {
@@ -13,11 +13,13 @@ export default function ChatPage() {
   const [content, setContent] = useState("");
   const [receiverName, setReceiverName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [roomId, setRoomId] = useState("");
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
-
   const searchParams = new URLSearchParams(useLocation().search);
   const receiverId = searchParams.get("therapist");
+
+  const getRoomId = (id1, id2) => [id1, id2].sort().join("-");
 
   const fetchMessages = async () => {
     try {
@@ -53,19 +55,29 @@ export default function ChatPage() {
       const currentUserId = jwtDecode(token).id;
       const messageId = Date.now();
 
-      const newMessage = { content, sender: currentUserId, _id: messageId };
+      const newMessage = {
+        content,
+        sender: currentUserId,
+        _id: messageId,
+        createdAt: new Date().toISOString(), // optimistic timestamp
+      };
+
       setMessages((prev) => [...prev, newMessage]);
+
       await axios.post(
         `${base}/api/messages`,
         { receiverId, content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       socket.emit("send-message", {
-        roomId: receiverId,
+        roomId,
         message: content,
         senderId: currentUserId,
         _id: messageId,
+        createdAt: newMessage.createdAt,
       });
+
       setContent("");
     } catch (err) {
       console.error("Failed to send message", err);
@@ -73,16 +85,24 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || !receiverId) return;
+
+    const currentUserId = jwtDecode(token).id;
+    const room = getRoomId(currentUserId, receiverId);
+    setRoomId(room);
+
     fetchMessages();
     fetchReceiverDetails();
 
-    socket.emit("join-room", { roomId: receiverId });
+    socket.connect();
+    socket.emit("join-room", { roomId: room });
 
-    socket.on("receive-message", ({ message, senderId, _id }) => {
+    socket.on("receive-message", ({ message, senderId, _id, createdAt }) => {
       setMessages((prev) => {
         const exists = prev.some((msg) => msg._id === _id);
         if (exists) return prev;
-        return [...prev, { content: message, sender: senderId, _id }];
+        return [...prev, { content: message, sender: senderId, _id, createdAt }];
       });
     });
 
@@ -123,14 +143,24 @@ export default function ChatPage() {
                 msg.sender === receiverId ? "justify-start" : "justify-end"
               }`}
             >
-              <div
-                className={`p-2 rounded-lg max-w-xs ${
-                  msg.sender === receiverId
-                    ? "bg-gray-200 text-black"
-                    : "bg-purple-600 text-white"
-                }`}
-              >
-                {msg.content}
+              <div className="max-w-xs">
+                <div
+                  className={`p-2 rounded-lg ${
+                    msg.sender === receiverId
+                      ? "bg-gray-200 text-black"
+                      : "bg-purple-600 text-white"
+                  }`}
+                >
+                  {msg.content}
+                </div>
+                {msg.createdAt && (
+                  <div className="text-xs text-gray-500 mt-1 text-right">
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           ))

@@ -43,6 +43,10 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (form.role === "admin") {
+      alert("Admin registration is not allowed.");
+      return;
+    }
     try {
       const res = await axios.post(`${base}/api/auth/register`, form);
       localStorage.setItem("token", res.data.token);
@@ -94,7 +98,6 @@ export default function Register() {
             >
               <option value="user">User</option>
               <option value="therapist">Therapist</option>
-              <option value="admin">Admin</option>
             </select>
 
             {/* Specialization for therapists only */}
