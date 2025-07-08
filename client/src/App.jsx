@@ -26,6 +26,7 @@ import TherapistLayout from './layouts/TherapistLayout.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import AdminUpload from './pages/admin/AdminUpload.jsx';
 import SplashLoader from './components/ui/SplashLoader.jsx';
+import OAuthSuccess from './pages/OAuthSuccess.jsx';
 
 import MoodAssessmentModal from './components/user/MoodAssessmentModal.jsx';
 
@@ -53,6 +54,7 @@ export default function App() {
         {/* 🛂 Public Auth Routes */}
         <Route path="/login" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to={`/${user.role}`} /> : <Register />} />
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
 
         {/* 👤 User Routes */}
         {user && user.role === 'user' && (

@@ -21,7 +21,7 @@ import selfHelpRoutes from './routes/selfHelpRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import  tipRoutes from './routes/tips.js';
+import tipRoutes from './routes/tips.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 
 // Cron job
@@ -41,7 +41,13 @@ const allowedOrigins = [
 // Middleware
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
-app.use(session({ secret: 'mindmend', resave: false, saveUninitialized: false }));
+app.use(session({
+  secret: 'mindmend', resave: false, saveUninitialized: false, cookie: {
+    secure: true, // only over HTTPS
+    sameSite: 'Lax',
+    httpOnly: true
+  }
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 

@@ -17,7 +17,13 @@ router.get('/google/callback', passport.authenticate('google', {
   session: false
 }), (req, res) => {
   const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '3d' });
-  res.redirect(`http://localhost:5173/oauth-success?token=${token}`);
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+    maxAge: 3 * 24 * 60 * 60 * 1000
+  });
+  res.redirect('https://mindmend-1.vercel.app/oauth-success');
 });
 
 export default router;

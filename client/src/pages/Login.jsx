@@ -69,6 +69,7 @@ export default function Login() {
           <button
             onClick={googleLogin}
             className="w-full flex items-center justify-center gap-2 border p-3 rounded-xl hover:bg-gray-100 transition"
+            disabled
           >
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png"
