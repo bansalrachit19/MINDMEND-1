@@ -1,5 +1,5 @@
 import SelfHelp from '../models/SelfHelp.js';
-import MoodEntry from '../models/MoodEntry.js'; 
+import MoodEntry from '../models/MoodEntry.js';
 
 export const createResource = async (req, res) => {
   try {
@@ -54,7 +54,7 @@ export const suggestResourcesByAI = async (req, res) => {
       {
         title: "Deep Breathing to Calm Anxiety",
         type: "meditation",
-        link: "https://www.youtube.com/watch?v=self-video",
+        link: "https://youtu.be/qnXX7boW_5k?si=fegff0BHM8V_YGNZ",
         description: "Guided breathing to reduce stress and clear the mind.",
         suggestedFor: ['self'],
         isAI: true,
@@ -65,7 +65,7 @@ export const suggestResourcesByAI = async (req, res) => {
       {
         title: "Coping with Depression: A Gentle Guide",
         type: "article",
-        link: "https://example.com/need-article",
+        link: "https://www.verywellhealth.com/coping-skills-for-depression-8426424#:~:text=This%20article%20offers%2022%20coping%20skills%20for%20depression%2C,year%2C%20and%20over%2060%25%20of%20them%20receive%20treatment.",
         description: "An insightful read for when you need professional help.",
         suggestedFor: ['need'],
         isAI: true,

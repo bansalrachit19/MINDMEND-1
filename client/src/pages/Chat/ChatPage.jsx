@@ -50,7 +50,10 @@ export default function ChatPage() {
     try {
       const token = localStorage.getItem("token");
       const currentUserId = jwtDecode(token).id;
-      setMessages((prev) => [...prev, { content, sender: currentUserId }]);
+      const messageId = Date.now();
+
+      const newMessage = { content, sender: currentUserId, _id: messageId };
+      setMessages((prev) => [...prev, newMessage]);
       await axios.post(
         "/api/messages",
         { receiverId, content },
@@ -60,6 +63,7 @@ export default function ChatPage() {
         roomId: receiverId,
         message: content,
         senderId: currentUserId,
+        _id: messageId,
       });
       setContent("");
     } catch (err) {
@@ -73,8 +77,12 @@ export default function ChatPage() {
 
     socket.emit("join-room", { roomId: receiverId });
 
-    socket.on("receive-message", ({ message, senderId }) => {
-      setMessages((prev) => [...prev, { content: message, sender: senderId }]);
+    socket.on("receive-message", ({ message, senderId, _id }) => {
+      setMessages((prev) => {
+        const exists = prev.some((msg) => msg._id === _id);
+        if (exists) return prev;
+        return [...prev, { content: message, sender: senderId, _id }];
+      });
     });
 
     return () => {

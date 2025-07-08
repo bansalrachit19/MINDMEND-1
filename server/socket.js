@@ -25,12 +25,12 @@ export const initSocket = (server) => {
       socket.join(roomId);
     });
 
-    socket.on('send-message', ({ roomId, message, senderId  }) => {
+    socket.on('send-message', ({ roomId, message, senderId, _id  }) => {
       if (!roomId || !message || !senderId){
         console.log('room id not available');
         return;
       }
-      io.to(roomId).emit('receive-message', {message, senderId });
+      io.to(roomId).emit('receive-message', {message, senderId, _id });
     });
 
     socket.on('typing', ({ roomId, user }) => {
