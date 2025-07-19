@@ -6,11 +6,11 @@ import dayjs from 'dayjs';
 const base = import.meta.env.VITE_API_BASE_URL;
 
 const moodLabels = {
-  happy: '😊 Happy',
   sad: '😢 Sad',
   anxious: '😰 Anxious',
   angry: '😡 Angry',
   neutral: '😐 Neutral',
+  happy: '😊 Happy',
   excited: '🤩 Excited'
 };
 
